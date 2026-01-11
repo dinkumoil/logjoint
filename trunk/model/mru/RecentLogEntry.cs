@@ -58,7 +58,7 @@ namespace LogJoint.MRU
 
         public override string ToString()
         {
-            string paramsStr = ConnectionParams.ToString();
+            string? paramsStr = ConnectionParams.ToString();
             return string.Format("<{0}\\{1}>{2}{3}",
                 Factory.CompanyName, Factory.FormatName, string.IsNullOrEmpty(paramsStr) ? "" : " ", paramsStr);
         }

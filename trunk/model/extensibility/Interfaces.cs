@@ -28,10 +28,10 @@ namespace LogJoint.Extensibility
         Version Version { get; }
         string Name { get; }
         string Description { get; }
-        IPluginIndexItem IndexItem { get; }
+        IPluginIndexItem? IndexItem { get; }
         IReadOnlyList<IPluginInfo> Dependencies { get; }
         IReadOnlyList<IPluginInfo> Dependants { get; }
-        IPluginManifest InstalledPluginManifest { get; }
+        IPluginManifest? InstalledPluginManifest { get; }
     };
 
     public interface IPluginInstallationRequestsBuilder
@@ -72,8 +72,8 @@ namespace LogJoint.Extensibility
         Version Version { get; }
         IReadOnlyList<IPluginFile> Files { get; }
         IPluginFile Entry { get; }
-        IPluginFile Test { get; }
-        IPluginFile TestEntry { get; }
+        IPluginFile? Test { get; }
+        IPluginFile? TestEntry { get; }
         IReadOnlyList<string> Dependencies { get; }
     };
 

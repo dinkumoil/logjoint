@@ -10,9 +10,9 @@ namespace LogJoint.Search
     public class SearchState
     {
         internal Options options;
-        internal IRegex re;
+        internal IRegex? re;
         internal MessageFlag contentTypeMask;
-        internal IMatch searchMatch;
+        internal IMatch? searchMatch;
     };
 
     public static class Extensions
@@ -45,7 +45,7 @@ namespace LogJoint.Search
             StringSlice text,
             int? startTextPosition)
         {
-            IRegex re = state.re;
+            IRegex? re = state.re;
 
             // matched string position
             int matchBegin; // index of the first matched char

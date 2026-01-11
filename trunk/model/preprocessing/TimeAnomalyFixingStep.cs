@@ -38,7 +38,7 @@ namespace LogJoint.Preprocessing
         {
             await callback.BecomeLongRunning();
 
-            string factoryName = @params.Argument;
+            string? factoryName = @params.Argument ?? "";
 
             callback.TempFilesCleanupList.Add(@params.Location);
             Action<double?> setStepDescription = prctComplete =>

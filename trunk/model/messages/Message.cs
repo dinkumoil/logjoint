@@ -13,7 +13,7 @@ namespace LogJoint
             SeverityFlag s,
             StringSlice rawText = new StringSlice(),
             int? maxLineLen = null,
-            Func<StringSlice> lazyText = null
+            Func<StringSlice>? lazyText = null
         )
         {
             if (endPosition < position)
@@ -97,7 +97,7 @@ namespace LogJoint
             public readonly long EndPosition = endPosition;
         };
 
-        public EmbeddedPositions GetEmbeddedPosition() => embeddedPositions;
+        public EmbeddedPositions? GetEmbeddedPosition() => embeddedPositions;
 
         public void SetEmbeddedPositions(EmbeddedPositions embeddedPositions)
         {
@@ -147,13 +147,13 @@ namespace LogJoint
         readonly MessageFlag flags;
         long position, endPosition;
         StringSlice text;
-        Func<StringSlice> lazyText;
-        MultilineText textML;
+        Func<StringSlice>? lazyText;
+        MultilineText? textML;
         StringSlice rawText;
-        MultilineText rawTextML;
+        MultilineText? rawTextML;
         int? hashCodeCache;
         StringSlice link = StringSlice.Empty;
-        EmbeddedPositions embeddedPositions;
+        EmbeddedPositions? embeddedPositions;
 
         #endregion
     };

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -8,9 +9,9 @@ namespace LogJoint
 {
     public class TagsPredicate
     {
-        Node root;
-        ImmutableHashSet<(string, int)> usedTags;
-        string gString, pString;
+        Node? root;
+        ImmutableHashSet<(string, int)>? usedTags;
+        string? gString, pString;
 
         public class SyntaxError : Exception
         {
@@ -30,7 +31,7 @@ namespace LogJoint
             return new TagsPredicate() { root = Node.ParseNode(str)?.Simplify() };
         }
 
-        public static bool TryParse(string str, out TagsPredicate predicate)
+        public static bool TryParse(string str, [NotNullWhen(true)] out TagsPredicate? predicate)
         {
             try
             {
@@ -49,7 +50,7 @@ namespace LogJoint
             return ParseKeyword(str, out var _);
         }
 
-        static bool ParseKeyword(string str, out string keyword)
+        static bool ParseKeyword(string str, [NotNullWhen(true)] out string? keyword)
         {
             var s = str.ToUpper();
             if (s == "NOT" || s == "OR" || s == "AND")
@@ -157,8 +158,8 @@ namespace LogJoint
 
             class Token
             {
-                public string value;
-                public int pos;
+                required public string value;
+                required public int pos;
             };
 
             public readonly Type type;
@@ -170,6 +171,7 @@ namespace LogJoint
             {
                 this.type = t;
                 this.children = children.ToList();
+                this.tag = "";
             }
 
             Node(Token tok)
@@ -213,12 +215,12 @@ namespace LogJoint
                 return list;
             }
 
-            static bool RecognizeKeyword(Token token, out string keyword)
+            static bool RecognizeKeyword(Token token, [NotNullWhen(true)] out string? keyword)
             {
                 return TagsPredicate.ParseKeyword(token.value, out keyword);
             }
 
-            public static Node Combine(IEnumerable<Node> nodes)
+            public static Node Combine(IEnumerable<Node?> nodes)
             {
                 var terms = new Dictionary<string, Node>();
                 Action<Node> addTerm = node =>
@@ -242,13 +244,13 @@ namespace LogJoint
             }
 
             // supports only 3 levels: top level OR, second level - ANDs, tag or NOT tag at level 3.
-            public static Node ParseNode(string str)
+            public static Node? ParseNode(string str)
             {
                 var tokens = Tokenize(str);
                 var tokenIdx = 0;
-                Func<Token> popToken = () => tokenIdx < tokens.Count ? tokens[tokenIdx++] : null;
+                Func<Token?> popToken = () => tokenIdx < tokens.Count ? tokens[tokenIdx++] : null;
                 Action pushToken = () => --tokenIdx;
-                Func<Node> popTag = () => // gets next tag or negated tag
+                Func<Node?> popTag = () => // gets next tag or negated tag
                 {
                     var t = popToken();
                     if (t == null)
@@ -273,15 +275,15 @@ namespace LogJoint
                 };
 
                 Node topLevelOr = new Node(Type.Or);
-                Node currentAnd = null;
+                Node? currentAnd = null;
 
                 Action startNewAnd = () => topLevelOr.children.Add(currentAnd = new Node(Type.And));
 
                 startNewAnd();
 
-                Node firstNode = popTag();
+                Node? firstNode = popTag();
                 if (firstNode != null)
-                    currentAnd.children.Add(firstNode);
+                    currentAnd!.children.Add(firstNode);
                 else
                     return null;
 
@@ -303,7 +305,7 @@ namespace LogJoint
                         startNewAnd();
                         pushToken();
                     }
-                    Node tag = popTag();
+                    Node? tag = popTag();
                     if (tag != null)
                         currentAnd.children.Add(tag);
                     else
@@ -314,7 +316,7 @@ namespace LogJoint
             }
 
 
-            public static Node AddTag(Node to, string tag)
+            public static Node AddTag(Node? to, string tag)
             {
                 var tagObj = new Node(new Token() { value = tag, pos = 0 });
                 if (to == null)
@@ -334,11 +336,11 @@ namespace LogJoint
                 return false;
             }
 
-            public Node UnuseTag(string tag)
+            public Node? UnuseTag(string tag)
             {
                 if (type == Type.Tag)
                     return this.tag == tag ? null : this;
-                var n = new Node(type, children.Select(c => c.UnuseTag(tag)).Where(c => c != null).ToArray());
+                var n = new Node(type, children.Select(c => c.UnuseTag(tag)).OfType<Node>().ToArray());
                 if (n.children.Count == 0)
                     return null;
                 return n;

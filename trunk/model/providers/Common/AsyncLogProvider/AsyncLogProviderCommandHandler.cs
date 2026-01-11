@@ -16,8 +16,8 @@ namespace LogJoint
         public CancellationToken Cancellation;
         public CancellationToken Preemption;
         public AsyncLogProviderDataCache? Cache;
-        public LJTraceSource Tracer;
-        public LogProviderStats Stats;
+        required public LJTraceSource Tracer;
+        required public LogProviderStats Stats;
 
         // can be used only in async part
         public IMessagesReader Reader;

@@ -15,7 +15,7 @@ namespace LogJoint.Postprocessing.TimeSeries
             var exampleLogLines = (from a in t.GetCustomAttributes(typeof(ExampleLineAttribute), true).OfType<ExampleLineAttribute>()
                                    select a.Value).ToList();
 
-            string getUnitGroup(string value)
+            string? getUnitGroup(string? value)
             {
                 var m = Regex.Match(value ?? "", @"\<(\w+)\>");
                 return m.Success ? m.Groups[1].Value : null;

@@ -90,17 +90,18 @@ namespace LogJoint
             var doc = XDocument.Load(new MemoryStream(unprotectedData, false));
             Clear();
             entries.AddRange(
-                doc.Element("credentials").Elements("cred").Select(e =>
-                    new Entry()
-                    {
-                        UriPrefix = new Uri(e.Attribute("uri").Value),
-                        Cred = new System.Net.NetworkCredential(
-                            e.Attribute("user").Value,
-                            e.Attribute("pwd").Value,
-                            e.Attribute("domain").Value
-                        )
-                    }
-                )
+                from e in doc.SafeElement("credentials").SafeElements("cred")
+                let uri = e.Attribute("uri")?.Value
+                where uri != null
+                select new Entry
+                {
+                    UriPrefix = new Uri(uri),
+                    Cred = new System.Net.NetworkCredential(
+                        e.Attribute("user")?.Value,
+                        e.Attribute("pwd")?.Value,
+                        e.Attribute("domain")?.Value
+                    )
+                }
             );
         }
 

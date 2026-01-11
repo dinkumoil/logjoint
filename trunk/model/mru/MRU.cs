@@ -230,7 +230,7 @@ namespace LogJoint.MRU
         static XElement CloneAndEnsureRoot(ref XDocument document)
         {
             document = new XDocument(document);
-            XElement root = document.Element(RootNodeName);
+            XElement? root = document.Element(RootNodeName);
             if (root == null)
                 document.Add(root = new XElement(RootNodeName));
             return root;
@@ -262,7 +262,7 @@ namespace LogJoint.MRU
                 new XElement(
                     EntryNodeName,
                     new XAttribute(TypeAttrName, LogTypeAttrValue),
-                    new XAttribute(AnnotationAttrName, annotation ?? ""),
+                    new XAttribute(AnnotationAttrName, annotation),
                     DateTime.UtcNow.ToDateTimeAttribute(DateAttrName),
                     new RecentLogEntry(provider.Factory, mruConnectionParams, annotation, null).ToString()
                 ),

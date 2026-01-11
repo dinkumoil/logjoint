@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace LogJoint.Preprocessing
@@ -26,9 +27,9 @@ namespace LogJoint.Preprocessing
             if (HttpUtils.IsWellFormedAbsoluteUriString(sourceFile.Location))
             {
                 var uri = new Uri(sourceFile.Location);
-                string localFilePath;
+                string? localFilePath;
                 AppLaunch.LaunchUriData? launchUriData;
-                IPreprocessingStep extensionStep;
+                IPreprocessingStep? extensionStep;
 
                 if ((localFilePath = TryDetectLocalFileUri(uri)) != null)
                 {
@@ -63,14 +64,14 @@ namespace LogJoint.Preprocessing
             throw new InvalidOperationException();
         }
 
-        static string TryDetectLocalFileUri(Uri uri)
+        static string? TryDetectLocalFileUri(Uri uri)
         {
             if (String.Compare(uri.Scheme, "file", ignoreCase: true) != 0)
                 return null;
             return uri.LocalPath;
         }
 
-        bool TryExtensions(Uri uri, out IPreprocessingStep extensionStep)
+        bool TryExtensions(Uri uri, [NotNullWhen(true)] out IPreprocessingStep? extensionStep)
         {
             foreach (var ext in extensions.Items)
             {

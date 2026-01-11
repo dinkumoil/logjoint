@@ -1,14 +1,15 @@
-﻿using System;
+﻿using LogJoint.Postprocessing;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using System.Diagnostics;
 using System.Collections.Immutable;
-using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Threading;
-using LogJoint.Postprocessing;
+using System.Threading.Tasks;
 
 namespace LogJoint.Extensibility
 {
@@ -24,7 +25,7 @@ namespace LogJoint.Extensibility
         readonly Dictionary<Type, object> types = new Dictionary<Type, object>();
         readonly AutoUpdate.IUpdateDownloader pluginsIndexDownloader;
         readonly IPluginsIndexFactory pluginsIndexFactory;
-        IPluginsIndex pluginsIndex = null;
+        IPluginsIndex? pluginsIndex = null;
         ImmutableDictionary<string, bool> installationRequests = ImmutableDictionary.Create<string, bool>();
 
         public PluginsManager(
@@ -91,7 +92,7 @@ namespace LogJoint.Extensibility
                     resultStream.Position = 0;
                     pluginsIndex = pluginsIndexFactory.Create(resultStream, result.ETag);
                 }
-                return MakePluginInfoList(pluginsIndex, pluginManifests, telemetry);
+                return MakePluginInfoList(pluginsIndex!, pluginManifests, telemetry);
             }
         }
 
@@ -106,7 +107,7 @@ namespace LogJoint.Extensibility
         {
             using (tracer.NewFrame)
             {
-                string thisPath = !IsBrowser.Value ? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) : "";
+                string thisPath = !IsBrowser.Value ? (Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "") : "";
                 string pluginsDirectory = Path.Combine(thisPath, "Plugins");
                 bool pluginsDirectoryExists = Directory.Exists(pluginsDirectory);
                 tracer.Info("plugins directory: {0}{1}", pluginsDirectory, !pluginsDirectoryExists ? " (MISSING!)" : "");
@@ -125,7 +126,7 @@ namespace LogJoint.Extensibility
                     .Select(pluginDirectory =>
                 {
                     tracer.Info("---> plugin found {0}", pluginDirectory);
-                    IPluginManifest manifest = null;
+                    IPluginManifest? manifest = null;
                     try
                     {
                         manifest = new PluginManifest(pluginDirectory);
@@ -137,7 +138,7 @@ namespace LogJoint.Extensibility
                         telemetry.ReportException(e, "Bad manifest in " + pluginDirectory);
                     }
                     return manifest;
-                }).Where(manifest => manifest != null).ToDictionarySafe(
+                }).OfType<IPluginManifest>().ToDictionarySafe(
                     manifest => manifest.Id, manifest => manifest,
                     (exisingManifest, newManifest) => newManifest
                 );
@@ -165,7 +166,7 @@ namespace LogJoint.Extensibility
                     }
                     var loadTime = sw.Elapsed;
                     sw.Restart();
-                    Type pluginType;
+                    Type? pluginType;
                     try
                     {
                         pluginType = pluginAsm.GetType("LogJoint.Plugin");
@@ -188,19 +189,20 @@ namespace LogJoint.Extensibility
                     var presentationEntryPoint = appEntryPoint.GetType().InvokeMember("Presentation", BindingFlags.GetProperty, null, appEntryPoint, new object[0]);
 
                     TimeSpan instantiationTime = TimeSpan.Zero;
-                    object plugin = null;
+                    object? plugin = null;
 
-                    bool TryCtr(params object[] @params)
+                    bool TryCtr([NotNullWhen(true)] out object? result, params object[] @params)
                     {
                         var ctr = pluginType.GetConstructor(@params.Select(p => p.GetType()).ToArray());
                         if (ctr == null)
                         {
+                            result = null;
                             return false;
                         }
                         sw.Restart();
                         try
                         {
-                            plugin = ctr.Invoke(@params);
+                            result = ctr.Invoke(@params);
                         }
                         catch (Exception e)
                         {
@@ -210,9 +212,9 @@ namespace LogJoint.Extensibility
                         return true;
                     }
 
-                    if (!TryCtr(appEntryPoint)
-                     && !(presentationEntryPoint != null && TryCtr(modelEntryPoint, presentationEntryPoint))
-                     && !TryCtr(modelEntryPoint))
+                    if (!TryCtr(out plugin, appEntryPoint)
+                     && !(presentationEntryPoint != null && TryCtr(out plugin, modelEntryPoint, presentationEntryPoint))
+                     && !TryCtr(out plugin, modelEntryPoint))
                     {
                         throw new Exception("plugin class does not implement ctr with LogJoint.IApplication argument, or with LogJoint.IModel argument, or with IModel and IPresentation arguments");
                     }
@@ -244,7 +246,7 @@ namespace LogJoint.Extensibility
                                 throw new Exception($"Plugin {manifest.Id} requires {dep} that is not found");
                             return depManifest.Files.Where(f => f.Type == PluginFileType.SDK);
                         }).ToArray();
-                        Assembly dependencyResolveHandler(object s, ResolveEventArgs e)
+                        Assembly? dependencyResolveHandler(object? s, ResolveEventArgs e)
                         {
                             var fileName = $"{(new AssemblyName(e.Name)).Name}.dll";
                             var sdkFile = sdks.FirstOrDefault(f => Path.GetFileName(f.RelativePath) == fileName);
@@ -254,7 +256,7 @@ namespace LogJoint.Extensibility
                             }
                             catch (Exception ex)
                             {
-                                throw new Exception($"Failed to load SDK asm '{sdkFile.AbsolutePath}' requested by {manifest.Id}", ex);
+                                throw new Exception($"Failed to load SDK asm '{sdkFile?.AbsolutePath}' requested by {manifest.Id}", ex);
                             }
                         }
                         AppDomain.CurrentDomain.AssemblyResolve += dependencyResolveHandler;
@@ -347,7 +349,7 @@ namespace LogJoint.Extensibility
                     telemetryCollector.ReportException(new Exception("Bad plug-ins index"),
                         $"Plug-in {p.id} depends on non-indexed plug-in(s) {string.Join(",", unresolvedDeps)}");
                 }
-                var resolvedDeps = deps.Where(d => d.resolved).Select(d => d.dep).ToList();
+                var resolvedDeps = deps.Where(d => d.resolved).Select(d => d.dep).OfType<PluginInfo>().ToList();
                 p.dependencies = resolvedDeps.AsReadOnly();
                 resolvedDeps.ForEach(d => d.dependants = d.dependants.Add(p));
             }
@@ -357,22 +359,22 @@ namespace LogJoint.Extensibility
 
         class PluginInfo : IPluginInfo
         {
-            public string id, name, description;
-            public IPluginIndexItem indexItem;
-            public Version version;
-            public IPluginManifest installedPluginManifest;
-            public IReadOnlyList<string> dependenciesIds;
-            public IReadOnlyList<IPluginInfo> dependencies;
+            required public string id, name, description;
+            required public IPluginIndexItem? indexItem;
+            required public Version version;
+            required public IPluginManifest? installedPluginManifest;
+            required public IReadOnlyList<string> dependenciesIds;
+            public IReadOnlyList<IPluginInfo> dependencies = ImmutableList.Create<IPluginInfo>();
             public ImmutableList<IPluginInfo> dependants = ImmutableList.Create<IPluginInfo>();
 
             string IPluginInfo.Id => id;
             Version IPluginInfo.Version => version;
             string IPluginInfo.Name => name;
             string IPluginInfo.Description => description;
-            IPluginIndexItem IPluginInfo.IndexItem => indexItem;
+            IPluginIndexItem? IPluginInfo.IndexItem => indexItem;
             IReadOnlyList<IPluginInfo> IPluginInfo.Dependencies => dependencies;
             IReadOnlyList<IPluginInfo> IPluginInfo.Dependants => dependants;
-            IPluginManifest IPluginInfo.InstalledPluginManifest => installedPluginManifest;
+            IPluginManifest? IPluginInfo.InstalledPluginManifest => installedPluginManifest;
         };
 
         class PluginInstallationRequestsBuilder : IPluginInstallationRequestsBuilder

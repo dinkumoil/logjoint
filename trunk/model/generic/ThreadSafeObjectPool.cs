@@ -14,7 +14,7 @@ namespace LogJoint
 
         public T LockAndGet()
         {
-            T ret;
+            T? ret;
             if (freeObjects.TryPop(out ret))
                 return ret;
             ret = factoryMethod(this);
@@ -55,10 +55,10 @@ namespace LogJoint
         {
             for (; ; )
             {
-                WeakReference wref;
+                WeakReference? wref;
                 if (!freeObjects.TryPop(out wref))
                     break;
-                T ret = wref.Target as T;
+                T? ret = wref.Target as T;
                 if (ret != null)
                     return ret;
             }

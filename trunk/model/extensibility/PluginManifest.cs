@@ -17,8 +17,8 @@ namespace LogJoint.Extensibility
         readonly Version version;
         readonly IReadOnlyList<IPluginFile> files;
         readonly IPluginFile entry;
-        readonly IPluginFile test;
-        readonly IPluginFile testEntry;
+        readonly IPluginFile? test;
+        readonly IPluginFile? testEntry;
         readonly IReadOnlyList<string> dependencies;
 
         public PluginManifest(string pluginDirectory)
@@ -41,8 +41,10 @@ namespace LogJoint.Extensibility
             if (string.IsNullOrWhiteSpace(this.id))
                 throw new BadManifestException($"'{id}' is not a valid plugin id");
             var versionStr = getMandatory("version").Value;
-            if (!Version.TryParse(versionStr, out this.version))
+            Version? parsedVersion;
+            if (!Version.TryParse(versionStr, out parsedVersion))
                 throw new BadManifestException($"'{versionStr}' is not a valid plugin version");
+            this.version = parsedVersion;
             if (version.Build == -1)
                 throw new BadManifestException($"Bad version '{versionStr}': version should contain at least 3 components");
             this.name = getMandatory("name").Value;
@@ -99,9 +101,9 @@ namespace LogJoint.Extensibility
 
         IPluginFile IPluginManifest.Entry => entry;
 
-        IPluginFile IPluginManifest.Test => test;
+        IPluginFile? IPluginManifest.Test => test;
 
-        IPluginFile IPluginManifest.TestEntry => testEntry;
+        IPluginFile? IPluginManifest.TestEntry => testEntry;
 
         IReadOnlyList<string> IPluginManifest.Dependencies => dependencies;
 
@@ -109,9 +111,9 @@ namespace LogJoint.Extensibility
 
         class File : IPluginFile
         {
-            public PluginManifest manifest;
-            public PluginFileType type;
-            public string relativePath;
+            required public PluginManifest manifest;
+            required public PluginFileType type;
+            required public string relativePath;
 
             IPluginManifest IPluginFile.Manifest => manifest;
 

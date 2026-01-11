@@ -140,7 +140,7 @@ namespace LogJoint
                 while (queue.Count > 0)
                 {
                     var h = queue.Dequeue();
-                    callback(h.Peek());
+                    callback(h.Peek()!);
                     h.Dequeue();
                     if (h.Peek() == null)
                         await h.FillBuffer();

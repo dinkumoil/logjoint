@@ -8,10 +8,10 @@ namespace LogJoint
     {
         public static string GetFileOrFolderBasedUserFriendlyConnectionName(IConnectionParams cp)
         {
-            string displayName = cp[ConnectionParamsKeys.DisplayNameConnectionParam];
+            string? displayName = cp[ConnectionParamsKeys.DisplayNameConnectionParam];
             if (!string.IsNullOrEmpty(displayName))
                 return displayName;
-            string rotatedLogFolder = cp[ConnectionParamsKeys.RotatedLogFolderPathConnectionParam];
+            string? rotatedLogFolder = cp[ConnectionParamsKeys.RotatedLogFolderPathConnectionParam];
             if (!string.IsNullOrEmpty(rotatedLogFolder))
             {
                 var patterns = string.Join(";", GetRotatedLogPatterns(cp));
@@ -19,7 +19,7 @@ namespace LogJoint
                     patterns = $" ({patterns})";
                 return rotatedLogFolder + patterns;
             }
-            string id = cp[ConnectionParamsKeys.IdentityConnectionParam];
+            string? id = cp[ConnectionParamsKeys.IdentityConnectionParam];
             if (!string.IsNullOrEmpty(id))
                 return id;
             return cp[ConnectionParamsKeys.PathConnectionParam] ?? "";
@@ -62,7 +62,7 @@ namespace LogJoint
         {
             for (int patternIndex = 0; ; ++patternIndex)
             {
-                string p = cp[$"{ConnectionParamsKeys.RotatedLogPatternParamPrefix}{patternIndex}"];
+                string? p = cp[$"{ConnectionParamsKeys.RotatedLogPatternParamPrefix}{patternIndex}"];
                 if (string.IsNullOrEmpty(p))
                     break;
                 yield return p;
@@ -92,7 +92,7 @@ namespace LogJoint
 
         public static IConnectionParams RemovePathParamIfItRefersToTemporaryFile(IConnectionParams cp, ITempFilesManager mgr)
         {
-            string fileName = cp[ConnectionParamsKeys.PathConnectionParam];
+            string? fileName = cp[ConnectionParamsKeys.PathConnectionParam];
             if (!string.IsNullOrEmpty(fileName))
                 if (mgr.IsTemporaryFile(fileName))
                     cp[ConnectionParamsKeys.PathConnectionParam] = null;

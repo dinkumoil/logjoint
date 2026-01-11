@@ -85,6 +85,8 @@ namespace LogJoint.AutoUpdate
 
         IUpdateDownloader IFactory.CreatePluginUpdateDownloader(Extensibility.IPluginInfo pluginInfo)
         {
+            if (pluginInfo.IndexItem == null)
+                throw new InvalidOperationException("Cannot update plugin " + pluginInfo.Name);
             return new AzureUpdateDownloader(
                 traceSourceFactory,
                 pluginInfo.IndexItem.Location.ToString(),

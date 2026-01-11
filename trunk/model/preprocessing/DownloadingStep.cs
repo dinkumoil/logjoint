@@ -51,7 +51,7 @@ namespace LogJoint.Preprocessing
                 async Task writeToTempFile(Stream fromStream, long contentLength, string description)
                 {
                     using FileStream fs = new(tmpFileName, FileMode.Create);
-                    using var progress = contentLength != 0 ? progressAggregator.CreateProgressSink() : (Progress.IProgressEventsSink)null;
+                    using var progress = contentLength != 0 ? progressAggregator.CreateProgressSink() : (Progress.IProgressEventsSink?)null;
                     await IOUtils.CopyStreamWithProgressAsync(fromStream, fs, downloadedBytes =>
                     {
                         callback.SetStepDescription(string.Format("{2} {0}: {1}",

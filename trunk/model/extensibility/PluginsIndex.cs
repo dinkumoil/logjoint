@@ -84,10 +84,10 @@ namespace LogJoint.Extensibility
 
         class Item : IPluginIndexItem
         {
-            public string id, name, description, etag;
-            public Uri location;
-            public Version version;
-            public ImmutableArray<string> dependencies;
+            required public string id, name, description, etag;
+            required public Uri location;
+            required public Version version;
+            required public ImmutableArray<string> dependencies;
 
             string IPluginIndexItem.Id => id;
             Version IPluginIndexItem.Version => version;

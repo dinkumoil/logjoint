@@ -12,8 +12,9 @@ namespace LogJoint.Progress
     {
         // readonly objects
         readonly ISynchronizationContext invoker;
-        readonly Func<TimeSpan, Task> sleep;
-        readonly ProgressAggregator parent, root;
+        readonly Func<TimeSpan, Task>? sleep;
+        readonly ProgressAggregator? parent;
+        readonly ProgressAggregator root;
         readonly object sync = new object();
 
         // data below can be accessed from multiple user threads as well as from model thread.
@@ -21,7 +22,7 @@ namespace LogJoint.Progress
         readonly HashSet<ProgressEventsSink> sinks = new HashSet<ProgressEventsSink>();
         readonly HashSet<ProgressAggregator> children = new HashSet<ProgressAggregator>();
         int completedContributorsCount;
-        Task periodic;
+        Task? periodic;
         long currentVersion = 0;
 
         // data below is accessed from model thread only
@@ -33,7 +34,7 @@ namespace LogJoint.Progress
             readonly ISynchronizationContext invoker;
             readonly Func<TimeSpan, Task> sleep;
 
-            public Factory(ISynchronizationContext invoker, Func<TimeSpan, Task> sleep = null)
+            public Factory(ISynchronizationContext invoker, Func<TimeSpan, Task>? sleep = null)
             {
                 this.invoker = invoker;
                 this.sleep = sleep ?? Task.Delay;
@@ -72,11 +73,11 @@ namespace LogJoint.Progress
 
         double? IProgressAggregator.ProgressValue { get { return lastValue; } }
 
-        public event EventHandler<EventArgs> ProgressStarted;
+        public event EventHandler<EventArgs>? ProgressStarted;
 
-        public event EventHandler<ProgressChangedEventArgs> ProgressChanged;
+        public event EventHandler<ProgressChangedEventArgs>? ProgressChanged;
 
-        public event EventHandler<EventArgs> ProgressEnded;
+        public event EventHandler<EventArgs>? ProgressEnded;
 
         void IDisposable.Dispose()
         {
@@ -139,7 +140,10 @@ namespace LogJoint.Progress
                 {
                     while (true)
                     {
-                        await sleep(TimeSpan.FromMilliseconds(500));
+                        if (sleep != null)
+                        {
+                            await sleep(TimeSpan.FromMilliseconds(500));
+                        }
                         if (thisPeriodicVersion != Interlocked.Read(ref currentVersion))
                             break;
                         RootUpdate();
@@ -157,7 +161,7 @@ namespace LogJoint.Progress
         {
             bool active;
             double progress;
-            List<AggUpdateInfo> childrenUpdates = null;
+            List<AggUpdateInfo>? childrenUpdates = null;
             lock (sync)
             {
                 var activeContributorsCount = sinks.Count + children.Count;
@@ -204,7 +208,7 @@ namespace LogJoint.Progress
             info.childrenUpdates?.ForEach(upd => upd.agg.EndUpdate(upd));
             bool active = info.active;
             double progress = info.progress;
-            EventHandler<EventArgs> startStop = null;
+            EventHandler<EventArgs>? startStop = null;
             if (active != isProgressActive)
                 startStop = active ? ProgressStarted : ProgressEnded;
             isProgressActive = active;
@@ -222,10 +226,10 @@ namespace LogJoint.Progress
 
         class AggUpdateInfo
         {
-            public ProgressAggregator agg;
-            public bool active;
-            public double progress;
-            public List<AggUpdateInfo> childrenUpdates;
+            required public ProgressAggregator agg;
+            required public bool active;
+            required public double progress;
+            public List<AggUpdateInfo>? childrenUpdates;
         };
 
         class ProgressEventsSink : IProgressEventsSink

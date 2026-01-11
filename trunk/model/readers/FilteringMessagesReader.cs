@@ -296,7 +296,7 @@ namespace LogJoint
 
         static Message.EmbeddedPositions GetMandatoryEmbeddedPositions(IMessage message)
         {
-            Message.EmbeddedPositions embeddedPositions = ((Message)message).GetEmbeddedPosition();
+            Message.EmbeddedPositions? embeddedPositions = ((Message)message).GetEmbeddedPosition();
             if (embeddedPositions == null)
                 throw new InvalidDataException("Failed to extract embedded position");
             return embeddedPositions;

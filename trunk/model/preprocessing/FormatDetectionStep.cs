@@ -120,7 +120,7 @@ namespace LogJoint.Preprocessing
         {
             public int formatsTriedSoFar = 0;
             public CancellationTokenSource cancellation = new CancellationTokenSource();
-            public IPreprocessingStepCallback callback;
+            required public IPreprocessingStepCallback callback;
 
             void IFormatAutodetectionProgress.Trying(ILogProviderFactory factory)
             {
@@ -134,7 +134,7 @@ namespace LogJoint.Preprocessing
 
         class StreamHeader : IStreamHeader
         {
-            byte[] header;
+            required internal byte[] header;
 
             public static async ValueTask<StreamHeader> Create(string fileName, IFileSystem fs)
             {

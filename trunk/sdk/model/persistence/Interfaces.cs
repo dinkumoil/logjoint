@@ -37,7 +37,7 @@ namespace LogJoint.Persistence
         /// SAX reader to read session data.
         /// null id xml section is empty.
         /// </summary>
-        XmlReader Reader { get; }
+        XmlReader? Reader { get; }
         /// <summary>
         /// Returns the fraction on input the <see cref="Reader"/> has read so far
         /// </summary>

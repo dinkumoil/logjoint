@@ -209,7 +209,7 @@ namespace LogJoint.AutoUpdate
                     var requiredPlugins = await GetRequiredPlugins(pluginsManager, workerCancellationToken);
                     var requiredUpdateKey = factory.CreateUpdateKey(
                         appCheckResult.ETag,
-                        requiredPlugins.ToDictionary(p => p.Id, p => p.IndexItem.ETag)
+                        requiredPlugins.ToDictionary(p => p.Id, p => p.IndexItem!.ETag)
                     );
 
                     var nullUpdateKey = factory.CreateNullUpdateKey();

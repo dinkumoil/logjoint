@@ -289,7 +289,7 @@ namespace LogJoint.Preprocessing
 
     public interface IPreprocessingManagerExtension
     {
-        IPreprocessingStep DetectFormat(PreprocessingStepParams param, IStreamHeader header);
+        IPreprocessingStep? DetectFormat(PreprocessingStepParams param, IStreamHeader header);
         IPreprocessingStep? CreateStepByName(string stepName, PreprocessingStepParams stepParams);
         IPreprocessingStep TryParseLaunchUri(Uri url);
         Task FinalizePreprocessing(IPreprocessingStepCallback callback);

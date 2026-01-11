@@ -20,7 +20,7 @@ namespace LogJoint.Preprocessing
             this.stepsFactory = stepsFactory;
         }
 
-        IPreprocessingStep IPreprocessingManagerExtension.DetectFormat(PreprocessingStepParams param, IStreamHeader header)
+        IPreprocessingStep? IPreprocessingManagerExtension.DetectFormat(PreprocessingStepParams param, IStreamHeader header)
         {
             return null;
         }

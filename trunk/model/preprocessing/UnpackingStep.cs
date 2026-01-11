@@ -46,10 +46,10 @@ namespace LogJoint.Preprocessing
         {
             await callback.BecomeLongRunning();
 
-            string specificFileToExtract = @params.Argument;
+            string? specificFileToExtract = @params.Argument;
             callback.TempFilesCleanupList.Add(@params.Location);
 
-            for (string password = null; ;)
+            for (string? password = null; ;)
             {
                 try
                 {
@@ -78,9 +78,9 @@ namespace LogJoint.Preprocessing
 
         private async Task DoExtract(
             IPreprocessingStepCallback callback,
-            string specificFileToExtract,
+            string? specificFileToExtract,
             Func<PreprocessingStepParams, bool> onNext,
-            string password,
+            string? password,
             IFileSystem fileSystem)
         {
             async Task<ICSharpCode.SharpZipLib.Zip.ZipFile> CreateZipFile()

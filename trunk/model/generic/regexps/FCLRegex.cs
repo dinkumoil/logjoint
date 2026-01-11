@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using RENS = System.Text.RegularExpressions;
 
@@ -59,7 +60,7 @@ namespace LogJoint.RegularExpressions
             return groupNames;
         }
 
-        public bool Match(string str, int beginning, int length, ref IMatch outMatch)
+        public bool Match(string str, int beginning, int length, [NotNullWhen(true)] ref IMatch? outMatch)
         {
             var matchImpl = GetOrCreateOutMatchImpl(ref outMatch);
             var srcMatch = impl.Match(str, beginning, length);
@@ -69,7 +70,7 @@ namespace LogJoint.RegularExpressions
             return true;
         }
 
-        public bool Match(string str, int startat, ref IMatch outMatch)
+        public bool Match(string str, int startat, [NotNullWhen(true)] ref IMatch? outMatch)
         {
             var matchImpl = GetOrCreateOutMatchImpl(ref outMatch);
             var srcMatch = impl.Match(str, startat);
@@ -79,7 +80,7 @@ namespace LogJoint.RegularExpressions
             return true;
         }
 
-        public bool Match(StringSlice slice, int startFrom, ref IMatch outMatch)
+        public bool Match(StringSlice slice, int startFrom, [NotNullWhen(true)] ref IMatch? outMatch)
         {
             var matchImpl = GetOrCreateOutMatchImpl(ref outMatch);
             RENS.Match srcMatch;
@@ -112,9 +113,9 @@ namespace LogJoint.RegularExpressions
             return new FCLRegex(factory, pattern, options | ReOptions.Timeboxed, null);
         }
 
-        FCLMatch GetOrCreateOutMatchImpl(ref IMatch outMatch)
+        FCLMatch GetOrCreateOutMatchImpl([NotNull] ref IMatch? outMatch)
         {
-            FCLMatch matchImp;
+            FCLMatch? matchImp;
             if (outMatch == null)
             {
                 matchImp = new FCLMatch(this);

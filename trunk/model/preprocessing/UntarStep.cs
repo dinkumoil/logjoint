@@ -38,7 +38,7 @@ namespace LogJoint.Preprocessing
         {
             await callback.BecomeLongRunning();
 
-            string filter = @params.Argument;
+            string? filter = @params.Argument;
             callback.TempFilesCleanupList.Add(@params.Location);
 
             string tmpDirectory = callback.TempFilesManager.GenerateNewName();
@@ -77,7 +77,7 @@ namespace LogJoint.Preprocessing
             }
         }
 
-        public static readonly System.Text.Encoding NameEncoding = null; // Support only ASCII names
+        public static readonly System.Text.Encoding? NameEncoding = null; // Support only ASCII names
 
         readonly PreprocessingStepParams @params;
         readonly IStepsFactory preprocessingStepsFactory;

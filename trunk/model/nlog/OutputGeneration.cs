@@ -258,14 +258,14 @@ namespace LogJoint.NLog
         class CapturedNodeRegex
         {
             public SyntaxAnalysis.NodeRegex Regex;
-            public string CaptureName;
-            public string LayoutId;
+            required public string CaptureName;
+            required public string LayoutId;
         };
 
         class EscapingOptions
         {
             public string EscapingFormat = "{0}";
-            public string QuoteRegex;
+            public string? QuoteRegex;
         };
 
         static XmlNode EnsureElement(XmlNode parent, string name)

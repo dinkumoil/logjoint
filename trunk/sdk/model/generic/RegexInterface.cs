@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -46,9 +47,9 @@ namespace LogJoint.RegularExpressions
         ReOptions Options { get; }
         string Pattern { get; }
         IEnumerable<string> GetGroupNames();
-        bool Match(string str, int beginning, int length, ref IMatch match);
-        bool Match(string str, int startat, ref IMatch match);
-        bool Match(StringSlice str, int startat, ref IMatch match);
+        bool Match(string str, int beginning, int length, [NotNullWhen(true)] ref IMatch? match);
+        bool Match(string str, int startat, [NotNullWhen(true)] ref IMatch? match);
+        bool Match(StringSlice str, int startat, [NotNullWhen(true)] ref IMatch? match);
         IMatch CreateEmptyMatch();
         IRegex ToTimeboxed();
     };

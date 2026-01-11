@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace LogJoint
@@ -15,8 +16,8 @@ namespace LogJoint
         {
         }
 
-        public event EventHandler OnThreadListChanged;
-        public event EventHandler OnThreadPropertiesChanged;
+        public event EventHandler? OnThreadListChanged;
+        public event EventHandler? OnThreadPropertiesChanged;
 
         IThread IModelThreadsInternal.RegisterThread(string id, ILogSource logSource)
         {
@@ -35,7 +36,7 @@ namespace LogJoint
                 var result = new List<IThread>();
                 lock (sync)
                 {
-                    for (Thread t = this.threads; t != null; t = t.Next)
+                    for (Thread? t = this.threads; t != null; t = t.Next)
                         result.Add(t);
                 }
                 return result;
@@ -134,14 +135,14 @@ namespace LogJoint
                         }
                         else
                         {
-                            prev.next = next;
+                            prev!.next = next;
                             if (next != null)
                                 next.prev = prev;
                         }
                         owner.colors.ReleaseColor(color);
                     }
                     ModelThreads tmp = owner;
-                    EventHandler tmpEvt = tmp.OnThreadListChanged;
+                    EventHandler? tmpEvt = tmp.OnThreadListChanged;
                     owner = null;
                     tmpEvt?.Invoke(tmp, EventArgs.Empty);
                 }
@@ -170,8 +171,9 @@ namespace LogJoint
                 owner.OnThreadListChanged?.Invoke(owner, EventArgs.Empty);
             }
 
-            internal Thread Next => next;
+            internal Thread? Next => next;
 
+            [MemberNotNullWhen(false, nameof(owner))]
             bool IsDisposed => owner == null;
 
             string ComposeDescriptionFromTheFirstKnownLine(IMessage firstKnownLine)
@@ -191,17 +193,17 @@ namespace LogJoint
             readonly ILogSource logSource;
             readonly string id;
             readonly int color;
-            ModelThreads owner;
-            Thread next, prev;
+            ModelThreads? owner;
+            Thread? next, prev;
             string? description;
-            IMessage firstMessage;
+            IMessage? firstMessage;
             IBookmark? firstMessageBmk;
-            IMessage lastMessage;
+            IMessage? lastMessage;
             IBookmark? lastMessageBmk;
         };
 
         object sync = new object();
-        Thread threads;
+        Thread? threads;
         IColorLease colors;
     }
 }

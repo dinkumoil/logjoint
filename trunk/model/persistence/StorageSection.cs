@@ -81,6 +81,7 @@ namespace LogJoint.Persistence.Implementation
         private XmlStorageSection(StorageManagerImplementation manager, StorageEntry entry, string key, ulong additionalNumericKey, StorageSectionOpenFlag openFlags) :
             base(manager, entry, key, additionalNumericKey, KeyPrefix, openFlags)
         {
+            data = null!; // Init sets
         }
 
         private async ValueTask Init()
@@ -175,7 +176,7 @@ namespace LogJoint.Persistence.Implementation
             throw new NotSupportedException("can not modify XML section open with SAX flag");
         }
 
-        public XmlReader Reader
+        public XmlReader? Reader
         {
             get { CheckNotDisposed(); return reader; }
         }
@@ -185,7 +186,7 @@ namespace LogJoint.Persistence.Implementation
             get
             {
                 CheckNotDisposed();
-                return streamLen.HasValue ? ((double)fileSystemStream.Position / streamLen.Value) : 0d;
+                return streamLen.HasValue ? ((double)fileSystemStream!.Position / streamLen.Value) : 0d;
             }
         }
 
@@ -196,8 +197,8 @@ namespace LogJoint.Persistence.Implementation
             fileSystemStream?.Dispose();
         }
 
-        Stream fileSystemStream;
-        XmlReader reader;
+        Stream? fileSystemStream;
+        XmlReader? reader;
         double? streamLen;
     };
 

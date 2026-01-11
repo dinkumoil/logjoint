@@ -40,7 +40,7 @@ namespace LogJoint.Preprocessing
 
             using (var inFileStream = sourceFileInfo.OpenRead())
             using (var outFileStream = new FileStream(tmpFileName, FileMode.CreateNew))
-            using (var progress = sourceFileInfo.Length != 0 ? progressAggregator.CreateProgressSink() : (Progress.IProgressEventsSink)null)
+            using (var progress = sourceFileInfo.Length != 0 ? progressAggregator.CreateProgressSink() : (Progress.IProgressEventsSink?)null)
             {
                 using (var gzipStream = new ICSharpCode.SharpZipLib.GZip.GZipInputStream(inFileStream))
                 {

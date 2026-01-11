@@ -4,10 +4,10 @@ namespace LogJoint
 {
     public class TraceSourceFactory : ITraceSourceFactory
     {
-        readonly TraceListener[] programmaticListeners;
+        readonly TraceListener[]? programmaticListeners;
         readonly bool removeDefaultTraceListener;
 
-        public TraceSourceFactory(TraceListener[] programmaticListeners = null, bool removeDefaultTraceListener = false)
+        public TraceSourceFactory(TraceListener[]? programmaticListeners = null, bool removeDefaultTraceListener = false)
         {
             this.programmaticListeners = programmaticListeners?.ToArray();
             this.removeDefaultTraceListener = removeDefaultTraceListener;
