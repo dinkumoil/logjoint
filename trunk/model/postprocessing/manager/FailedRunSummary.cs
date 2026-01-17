@@ -7,7 +7,7 @@ namespace LogJoint.Postprocessing
     public class FailedRunSummary : IPostprocessorRunSummary, IStructuredPostprocessorRunSummary
     {
         readonly Exception exception;
-        string report;
+        string? report;
 
         public FailedRunSummary(Exception exception)
         {
@@ -24,7 +24,7 @@ namespace LogJoint.Postprocessing
             get { return false; }
         }
 
-        IPostprocessorRunSummary IPostprocessorRunSummary.GetLogSpecificSummary(ILogSource ls)
+        IPostprocessorRunSummary? IPostprocessorRunSummary.GetLogSpecificSummary(ILogSource ls)
         {
             return null;
         }

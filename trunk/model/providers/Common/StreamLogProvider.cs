@@ -61,7 +61,7 @@ namespace LogJoint
                         parentLoggingPrefix: tracer.Prefix));
 
                 if (TimeOffsets.TryParse(
-                    connectionParams[ConnectionParamsKeys.TimeOffsetConnectionParam] ?? "", out ITimeOffsets initialTimeOffset))
+                    connectionParams[ConnectionParamsKeys.TimeOffsetConnectionParam] ?? "", out ITimeOffsets? initialTimeOffset))
                 {
                     reader.TimeOffsets = initialTimeOffset;
                 }

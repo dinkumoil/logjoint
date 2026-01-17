@@ -273,7 +273,7 @@ namespace LogJoint
             return reader.SizeInBytes;
         }
 
-        void CompleteCommand(Command cmd, Exception error)
+        void CompleteCommand(Command cmd, Exception? error)
         {
             if (error != null)
                 tracer.Error(error, "Command failed {0}", cmd);
@@ -343,7 +343,7 @@ namespace LogJoint
                             return;
                     }
 
-                    void completeCmd(Exception error) => CompleteCommand(cmd, error);
+                    void completeCmd(Exception? error) => CompleteCommand(cmd, error);
 
                     try
                     {

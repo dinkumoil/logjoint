@@ -6,7 +6,7 @@ namespace LogJoint.Postprocessing.InternalTrace
 {
     public static class Extensions
     {
-        public static IEnumerableAsync<Message[]> Read(this IReader reader, Func<Task<Stream>> openStream, Action<double> progressHandler = null)
+        public static IEnumerableAsync<Message[]> Read(this IReader reader, Func<Task<Stream>> openStream, Action<double>? progressHandler = null)
         {
             return reader.Read(openStream, s => s.Dispose(), progressHandler);
         }

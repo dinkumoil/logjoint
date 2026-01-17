@@ -11,7 +11,7 @@ namespace LogJoint.Postprocessing
         public static Dictionary<ILogSource, LogSourceNames> GetSourcesSequenceDiagramNames(
             this ILogSourceNamesProvider logSourceNamesProvider,
             IEnumerable<ILogSource> sources,
-            Dictionary<ILogSource, LogSourceNames> suggestedNames = null)
+            Dictionary<ILogSource, LogSourceNames>? suggestedNames = null)
         {
             var dict = new Dictionary<ILogSource, LogSourceNames>();
             using (var logSourceNamesGenerator = logSourceNamesProvider.CreateNamesGenerator())
@@ -19,7 +19,7 @@ namespace LogJoint.Postprocessing
                 int unknownLogCounter = 0;
                 foreach (var src in sources)
                 {
-                    LogSourceNames name = null;
+                    LogSourceNames? name = null;
 
                     var annotation = src.Annotation;
                     if (!string.IsNullOrEmpty(annotation))

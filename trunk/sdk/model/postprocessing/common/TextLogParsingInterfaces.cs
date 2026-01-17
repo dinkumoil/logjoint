@@ -42,10 +42,10 @@ namespace LogJoint.Postprocessing
     public class TextLogParserOptions
     {
         public TextLogParserFlags Flags { get; set; }
-        public Action<double> ProgressHandler { get; set; }
+        public Action<double>? ProgressHandler { get; set; }
         public int RawBufferSize { get; set; } = 1024 * 512;
 
-        public TextLogParserOptions(Action<double> progressHandler)
+        public TextLogParserOptions(Action<double>? progressHandler)
         {
             this.ProgressHandler = progressHandler;
         }

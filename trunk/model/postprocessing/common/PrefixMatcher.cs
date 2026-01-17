@@ -12,7 +12,7 @@ namespace LogJoint.Postprocessing
             TrieNode node = root;
             foreach (var c in prefix)
             {
-                TrieNode tmp;
+                TrieNode? tmp;
                 if (c == '?')
                 {
                     if (node.any == null)
@@ -45,8 +45,8 @@ namespace LogJoint.Postprocessing
 
         public IMatchedPrefixesCollection Match(string str)
         {
-            HashSet<int> matchedIds = null;
-            TrieNode node = root;
+            HashSet<int>? matchedIds = null;
+            TrieNode? node = root;
             bool isAllMatchMode = false;
             foreach (char c in str)
             {
@@ -70,8 +70,8 @@ namespace LogJoint.Postprocessing
 
         public IMatchedPrefixesCollection MatchSubstrings(string inputString)
         {
-            HashSet<int> matchedIds = null;
-            var matchStates = new List<PrefixMatcher.MatchState>(inputString.Length);
+            HashSet<int>? matchedIds = null;
+            var matchStates = new List<PrefixMatcher.MatchState?>(inputString.Length);
 
             int matchedId = 0;
             foreach (var c in inputString)
@@ -104,7 +104,7 @@ namespace LogJoint.Postprocessing
         bool MatchNext(MatchState state, char c, out int matchedId)
         {
             matchedId = 0;
-            TrieNode node = state.node.Match(c, state.isAllMatchMode);
+            TrieNode? node = state.node.Match(c, state.isAllMatchMode);
             if (node == state.node)
                 state.isAllMatchMode = true;
             else
@@ -119,20 +119,20 @@ namespace LogJoint.Postprocessing
 
         class MatchState
         {
-            public TrieNode node;
+            required public TrieNode node;
             public bool isAllMatchMode;
         };
 
         class TrieNode
         {
             public Dictionary<char, TrieNode> children = new Dictionary<char, TrieNode>();
-            public TrieNode any;
+            public TrieNode? any;
             public bool all;
             public int prefixId;
 
-            public TrieNode Match(char c, bool isAllMatchMode)
+            public TrieNode? Match(char c, bool isAllMatchMode)
             {
-                TrieNode node;
+                TrieNode? node;
                 if (!isAllMatchMode && children.TryGetValue(c, out node))
                     return node;
                 else if (any != null)
