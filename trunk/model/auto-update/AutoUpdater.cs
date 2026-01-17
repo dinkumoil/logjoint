@@ -1,15 +1,13 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Reflection;
-using System.IO;
-using System.Xml.Linq;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.IO.Compression;
 using LogJoint.Persistence;
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LogJoint.AutoUpdate
 {
@@ -17,28 +15,36 @@ namespace LogJoint.AutoUpdate
     {
         readonly IUpdateDownloader updateDownloader;
         readonly IChangeNotification changeNotification;
-        readonly bool isActiveAutoUpdaterInstance;
-        readonly Task worker;
-        readonly CancellationTokenSource workerCancellation;
+        readonly Task? worker;
+        readonly CancellationTokenSource? workerCancellation;
         readonly CancellationToken workerCancellationToken;
-        readonly TaskCompletionSource<int> workerCancellationTask;
-        readonly object sync = new object();
-        readonly string managedAssembliesPath;
-        readonly string installationDir;
-        readonly string updateInfoFilePath;
+        readonly TaskCompletionSource<int>? workerCancellationTask;
+        readonly object sync = new();
         readonly ISynchronizationContext eventInvoker;
         readonly Telemetry.ITelemetryCollector telemetry;
         readonly Persistence.IStorageManager storage;
         readonly LJTraceSource trace;
         readonly IFactory factory;
         readonly Extensibility.IPluginsManagerInternal pluginsManager;
-        readonly ISubscription changeListenerSubscription;
+        readonly ISubscription? changeListenerSubscription;
 
         bool disposed;
         AutoUpdateState state;
-        LastUpdateCheckInfo lastUpdateResult;
+        LastUpdateCheckInfo? lastUpdateResult;
         TaskCompletionSource<int> checkRequested;
-        IPendingUpdate currentPendingUpdate;
+        IPendingUpdate? currentPendingUpdate;
+
+        [MemberNotNullWhen(true, nameof(worker))]
+        [MemberNotNullWhen(true, nameof(workerCancellation))]
+        [MemberNotNullWhen(true, nameof(workerCancellationTask))]
+        [MemberNotNullWhen(true, nameof(changeListenerSubscription))]
+        private bool IsActiveAutoUpdaterInstance => worker != null;
+
+        class Paths
+        {
+            public required string ManagedAssembliesPath;
+            public required string UpdateInfoFilePath;
+        };
 
         public AutoUpdater(
             IFactory factory,
@@ -59,13 +65,19 @@ namespace LogJoint.AutoUpdate
             this.pluginsManager = pluginsManager;
             this.trace = traceSourceFactory.CreateTraceSource("AutoUpdater");
 
+            Paths? paths = null;
             var entryAssemblyLocation = Assembly.GetEntryAssembly()?.Location;
             if (!string.IsNullOrEmpty(entryAssemblyLocation))
             {
-                this.managedAssembliesPath = Path.GetDirectoryName(entryAssemblyLocation);
-                this.updateInfoFilePath = Path.Combine(managedAssembliesPath, Constants.updateInfoFileName);
-                this.installationDir = Path.GetFullPath(
-                    Path.Combine(managedAssembliesPath, Constants.installationPathRootRelativeToManagedAssembliesLocation));
+                var managedAssembliesPath = Path.GetDirectoryName(entryAssemblyLocation);
+                if (managedAssembliesPath != null)
+                {
+                    paths = new Paths()
+                    {
+                        ManagedAssembliesPath = managedAssembliesPath,
+                        UpdateInfoFilePath = Path.Combine(managedAssembliesPath, Constants.UpdateInfoFileName)
+                    };
+                }
             }
 
             this.eventInvoker = eventInvoker;
@@ -76,31 +88,27 @@ namespace LogJoint.AutoUpdate
 
             bool isFirstInstance = mutualExecutionCounter.IsPrimaryInstance;
             bool isDownloaderConfigured = updateDownloader.IsDownloaderConfigured;
-            if (entryAssemblyLocation == null)
+            if (paths == null)
             {
                 trace.Info("autoupdater is disabled - no entry assembly");
-                isActiveAutoUpdaterInstance = false;
 
                 state = AutoUpdateState.Disabled;
             }
             else if (!isDownloaderConfigured)
             {
                 trace.Info("autoupdater is disabled - update downloader not configured");
-                isActiveAutoUpdaterInstance = false;
 
                 state = AutoUpdateState.Disabled;
             }
             else if (!isFirstInstance)
             {
                 trace.Info("autoupdater is deactivated - not a first instance of logjoint");
-                isActiveAutoUpdaterInstance = false;
 
                 state = AutoUpdateState.Inactive;
             }
             else
             {
                 trace.Info("autoupdater is enabled");
-                isActiveAutoUpdaterInstance = true;
 
                 state = AutoUpdateState.Idle;
 
@@ -117,7 +125,8 @@ namespace LogJoint.AutoUpdate
                     }
                 ));
 
-                worker = TaskUtils.StartInThreadPoolTaskScheduler(Worker);
+                worker = TaskUtils.StartInThreadPoolTaskScheduler(
+                    () => Worker(paths, workerCancellationTask.Task));
             }
         }
 
@@ -127,7 +136,7 @@ namespace LogJoint.AutoUpdate
                 return;
             trace.Info("disposing autoupdater");
             disposed = true;
-            if (isActiveAutoUpdaterInstance)
+            if (IsActiveAutoUpdaterInstance)
             {
                 bool workerCompleted = false;
                 changeListenerSubscription.Dispose();
@@ -148,7 +157,7 @@ namespace LogJoint.AutoUpdate
             }
         }
 
-        public event EventHandler Changed;
+        public event EventHandler? Changed;
 
         AutoUpdateState IAutoUpdater.State
         {
@@ -165,16 +174,16 @@ namespace LogJoint.AutoUpdate
             return currentPendingUpdate?.TrySetRestartAfterUpdateFlag() == true;
         }
 
-        LastUpdateCheckInfo IAutoUpdater.LastUpdateCheckResult
+        LastUpdateCheckInfo? IAutoUpdater.LastUpdateCheckResult
         {
             get { return lastUpdateResult; }
         }
 
-        async Task Worker()
+        async Task Worker(Paths paths, Task cancellationTask)
         {
             try
             {
-                await Task.Delay(Constants.initialWorkerDelay, workerCancellationToken);
+                await Task.Delay(Constants.InitialWorkerDelay, workerCancellationToken);
 
                 Persistence.IStorageEntry updatesStorageEntry = await storage.GetEntry("updates");
 
@@ -184,22 +193,22 @@ namespace LogJoint.AutoUpdate
 
                 for (; ; )
                 {
-                    var appUpdateInfoFileContent = UpdateInfoFileContent.Read(updateInfoFilePath);
+                    var appUpdateInfoFileContent = UpdateInfoFileContent.Read(paths.UpdateInfoFilePath);
                     var installationUpdateKey = factory.CreateUpdateKey(
                         appUpdateInfoFileContent.BinariesETag,
                         pluginsManager.InstalledPlugins.ToDictionary(
                             p => p.Id,
-                            p => UpdateInfoFileContent.Read(Path.Combine(p.PluginDirectory, Constants.updateInfoFileName)).BinariesETag
+                            p => UpdateInfoFileContent.Read(Path.Combine(p.PluginDirectory, Constants.UpdateInfoFileName)).BinariesETag
                         )
                     );
 
                     SetLastUpdateCheckInfo(appUpdateInfoFileContent);
 
-                    await IdleUntilItsTimeToCheckForUpdate(appUpdateInfoFileContent.LastCheckTimestamp);
+                    await IdleUntilItsTimeToCheckForUpdate(appUpdateInfoFileContent.LastCheckTimestamp, cancellationTask);
 
                     SetState(AutoUpdateState.Checking);
 
-                    var appCheckResult = await CheckForUpdate(appUpdateInfoFileContent.BinariesETag);
+                    var appCheckResult = await CheckForUpdate(appUpdateInfoFileContent.BinariesETag, paths);
                     if (appCheckResult.Status == DownloadUpdateResult.StatusCode.Failure)
                     {
                         SetState(AutoUpdateState.Idle);
@@ -209,7 +218,7 @@ namespace LogJoint.AutoUpdate
                     var requiredPlugins = await GetRequiredPlugins(pluginsManager, workerCancellationToken);
                     var requiredUpdateKey = factory.CreateUpdateKey(
                         appCheckResult.ETag,
-                        requiredPlugins.ToDictionary(p => p.Id, p => p.IndexItem!.ETag)
+                        requiredPlugins.ToDictionary(p => p.Id, p => p.IndexItem?.ETag)
                     );
 
                     var nullUpdateKey = factory.CreateNullUpdateKey();
@@ -230,7 +239,7 @@ namespace LogJoint.AutoUpdate
                         {
                             currentPendingUpdate = await factory.CreatePendingUpdate(
                                 requiredPlugins,
-                                managedAssembliesPath,
+                                paths.ManagedAssembliesPath,
                                 await ComposeUpdateLogFileName(updatesStorageEntry),
                                 workerCancellationToken
                             );
@@ -267,7 +276,7 @@ namespace LogJoint.AutoUpdate
             }
         }
 
-        private async Task<DownloadUpdateResult> CheckForUpdate(string currentBinariesETag)
+        private async Task<DownloadUpdateResult> CheckForUpdate(string? currentBinariesETag, Paths paths)
         {
             trace.Info("checking for update. current etag is '{0}'", currentBinariesETag);
 
@@ -276,12 +285,12 @@ namespace LogJoint.AutoUpdate
 
             trace.Info("update check finished with status {0}. error message is '{1}'",
                 downloadResult.Status, downloadResult.ErrorMessage);
-            new UpdateInfoFileContent(downloadResult.ETag, DateTime.UtcNow, downloadResult.ErrorMessage).Write(updateInfoFilePath);
+            new UpdateInfoFileContent(downloadResult.ETag, DateTime.UtcNow, downloadResult.ErrorMessage).Write(paths.UpdateInfoFilePath);
 
             return downloadResult;
         }
 
-        private async Task IdleUntilItsTimeToCheckForUpdate(DateTime? lastCheckTimestamp)
+        private async Task IdleUntilItsTimeToCheckForUpdate(DateTime? lastCheckTimestamp, Task cancellationTask)
         {
             for (; ; )
             {
@@ -302,9 +311,9 @@ namespace LogJoint.AutoUpdate
 
                 trace.Info("autoupdater now waits for any of wakeup events");
                 await Task.WhenAny(
-                    Task.Delay(TimeSpan.FromTicks(Constants.checkPeriod.Ticks / 10), workerCancellationToken),
+                    Task.Delay(TimeSpan.FromTicks(Constants.CheckPeriod.Ticks / 10), workerCancellationToken),
                     checkRequested.Task,
-                    workerCancellationTask.Task
+                    cancellationTask
                 );
 
                 workerCancellationToken.ThrowIfCancellationRequested();
@@ -313,7 +322,7 @@ namespace LogJoint.AutoUpdate
 
         void SetLastUpdateCheckInfo(UpdateInfoFileContent updateInfoFileContent)
         {
-            LastUpdateCheckInfo info = null;
+            LastUpdateCheckInfo? info = null;
             if (updateInfoFileContent.LastCheckTimestamp.HasValue)
                 info = new LastUpdateCheckInfo(updateInfoFileContent.LastCheckTimestamp.Value, updateInfoFileContent.LastCheckError);
             lock (sync)
@@ -341,7 +350,7 @@ namespace LogJoint.AutoUpdate
             {
                 await foreach (var sectionInfo in updatesStorageEntry.EnumSections(cancel))
                 {
-                    if (!sectionInfo.Key.StartsWith(Constants.updateLogKeyPrefix, StringComparison.OrdinalIgnoreCase))
+                    if (!sectionInfo.Key.StartsWith(Constants.UpdateLogKeyPrefix, StringComparison.OrdinalIgnoreCase))
                         continue;
                     trace.Info("found update log key={0}, id={1}", sectionInfo.Key, sectionInfo.Id);
                     string sectionAbsolutePath;
@@ -382,7 +391,7 @@ namespace LogJoint.AutoUpdate
         private async Task<string> ComposeUpdateLogFileName(Persistence.IStorageEntry updatesStorageEntry)
         {
             await using var updateLogSection = await updatesStorageEntry.OpenRawStreamSection(
-                string.Format("{0}-{1:x}-{2:yyyy'-'MM'-'ddTHH'-'mm'-'ss'Z'}", Constants.updateLogKeyPrefix, Guid.NewGuid().GetHashCode(), DateTime.UtcNow),
+                string.Format("{0}-{1:x}-{2:yyyy'-'MM'-'ddTHH'-'mm'-'ss'Z'}", Constants.UpdateLogKeyPrefix, Guid.NewGuid().GetHashCode(), DateTime.UtcNow),
                 StorageSectionOpenFlag.ClearOnOpen | StorageSectionOpenFlag.ReadWrite);
             return updateLogSection.AbsolutePath;
         }
@@ -392,7 +401,7 @@ namespace LogJoint.AutoUpdate
             if (!lastCheckTimestamp.HasValue)
                 return true;
             var lastChecked = lastCheckTimestamp.Value;
-            if (now > lastChecked + Constants.checkPeriod)
+            if (now > lastChecked + Constants.CheckPeriod)
                 return true;
             if (lastChecked - now > TimeSpan.FromDays(30)) // wall clock is way too behind. probably user messed up with it.
                 return true;

@@ -1,22 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using LogJoint.RegularExpressions;
-using System.Linq;
-using System.Threading.Tasks;
 using System.IO;
-using System.Threading;
 using System.Xml.Linq;
 
 namespace LogJoint.AutoUpdate
 {
     struct UpdateInfoFileContent
     {
-        public string BinariesETag;
+        public string? BinariesETag;
         public DateTime? LastCheckTimestamp;
         public string? LastCheckError;
 
-        public UpdateInfoFileContent(string binariesETag, DateTime? lastCheckTimestamp, string? lastCheckError)
+        public UpdateInfoFileContent(string? binariesETag, DateTime? lastCheckTimestamp, string? lastCheckError)
         {
             BinariesETag = binariesETag;
             LastCheckTimestamp = lastCheckTimestamp;

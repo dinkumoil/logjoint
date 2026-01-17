@@ -12,7 +12,7 @@ namespace LogJoint.AutoUpdate
     public interface IAutoUpdater : IDisposable
     {
         AutoUpdateState State { get; }
-        LastUpdateCheckInfo LastUpdateCheckResult { get; }
+        LastUpdateCheckInfo? LastUpdateCheckResult { get; }
         void CheckNow();
         bool TrySetRestartAfterUpdateFlag();
 
@@ -34,9 +34,9 @@ namespace LogJoint.AutoUpdate
     public class LastUpdateCheckInfo
     {
         public DateTime When { get; private set; }
-        public string ErrorMessage { get; private set; }
+        public string? ErrorMessage { get; private set; }
 
-        public LastUpdateCheckInfo(DateTime when, string errorMessage)
+        public LastUpdateCheckInfo(DateTime when, string? errorMessage)
         {
             When = when;
             ErrorMessage = errorMessage;
@@ -47,7 +47,7 @@ namespace LogJoint.AutoUpdate
     {
         bool IsDownloaderConfigured { get; }
         Task<DownloadUpdateResult> DownloadUpdate(string? etag, Stream targetStream, CancellationToken cancellation);
-        Task<DownloadUpdateResult> CheckUpdate(string etag, CancellationToken cancellation);
+        Task<DownloadUpdateResult> CheckUpdate(string? etag, CancellationToken cancellation);
     };
 
     public struct DownloadUpdateResult
@@ -59,8 +59,8 @@ namespace LogJoint.AutoUpdate
             Failure
         };
         public StatusCode Status;
-        public string ETag;
-        public DateTime LastModifiedUtc;
+        public string? ETag;
+        public DateTime? LastModifiedUtc;
         public string ErrorMessage;
     };
 
@@ -81,7 +81,7 @@ namespace LogJoint.AutoUpdate
         IUpdateDownloader CreateAppUpdateDownloader();
         IUpdateDownloader CreatePluginsIndexUpdateDownloader();
         IUpdateDownloader CreatePluginUpdateDownloader(Extensibility.IPluginInfo pluginInfo);
-        IUpdateKey CreateUpdateKey(string appEtag, IReadOnlyDictionary<string, string> pluginsEtags);
+        IUpdateKey CreateUpdateKey(string? appEtag, IReadOnlyDictionary<string, string?> pluginsEtags);
         IUpdateKey CreateNullUpdateKey();
         Task<IPendingUpdate> CreatePendingUpdate(
             IReadOnlyList<Extensibility.IPluginInfo> requiredPlugins,

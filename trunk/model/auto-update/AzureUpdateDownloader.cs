@@ -38,7 +38,7 @@ namespace LogJoint.AutoUpdate
             }
         }
 
-        async Task<DownloadUpdateResult> IUpdateDownloader.CheckUpdate(string etag, CancellationToken cancellation)
+        async Task<DownloadUpdateResult> IUpdateDownloader.CheckUpdate(string? etag, CancellationToken cancellation)
         {
             try
             {
@@ -76,12 +76,13 @@ namespace LogJoint.AutoUpdate
                 {
                     await response.GetResponseStream().CopyToAsync(targetStream);
                 }
+                string? lastModifiedUtcStr = response.Headers[HttpResponseHeader.LastModified];
                 return new DownloadUpdateResult()
                 {
                     Status = DownloadUpdateResult.StatusCode.Success,
                     ETag = response.Headers[HttpResponseHeader.ETag],
-                    LastModifiedUtc = DateTime.Parse(response.Headers[HttpResponseHeader.LastModified],
-                        null, DateTimeStyles.AdjustToUniversal)
+                    LastModifiedUtc = lastModifiedUtcStr != null ? DateTime.Parse(lastModifiedUtcStr,
+                        null, DateTimeStyles.AdjustToUniversal) : null
                 };
             }
         }

@@ -86,7 +86,7 @@ namespace LogJoint.Extensibility
 
     public interface IPluginsIndex
     {
-        string ETag { get; }
+        string? ETag { get; }
         IReadOnlyList<IPluginIndexItem> Plugins { get; }
     };
 
@@ -103,6 +103,6 @@ namespace LogJoint.Extensibility
 
     public interface IPluginsIndexFactory
     {
-        IPluginsIndex Create(Stream stream, string etag);
+        IPluginsIndex Create(Stream stream, string? etag);
     };
 }

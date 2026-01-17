@@ -1,35 +1,25 @@
 using System;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Reflection;
-using System.IO;
-using System.Xml.Linq;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.IO.Compression;
-using LogJoint.Persistence;
 using System.Runtime.InteropServices;
 
 namespace LogJoint.AutoUpdate
 {
-    static class Constants // todo: casing
+    static class Constants
     {
-        public static readonly TimeSpan initialWorkerDelay = TimeSpan.FromSeconds(3);
-        public static readonly TimeSpan checkPeriod = TimeSpan.FromHours(3);
-        public static readonly string updateInfoFileName = "update-info.xml";
-        public static readonly string updateLogKeyPrefix = "updatelog";
+        public static readonly TimeSpan InitialWorkerDelay = TimeSpan.FromSeconds(3);
+        public static readonly TimeSpan CheckPeriod = TimeSpan.FromHours(3);
+        public static readonly string UpdateInfoFileName = "update-info.xml";
+        public static readonly string UpdateLogKeyPrefix = "updatelog";
 
         // on mac managed dlls are in logjoint.app/Contents/MonoBundle
         // Contents is the installation root. It is completely replaced during update.
-        // on win dlls are in root installation folder
-        public static readonly string installationPathRootRelativeToManagedAssembliesLocation =
+        // on win dlls are in the root installation folder
+        public static readonly string InstallationPathRootRelativeToManagedAssembliesLocation =
             RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "../" : ".";
-        public static readonly string managedAssembliesLocationRelativeToInstallationRoot =
+        public static readonly string ManagedAssembliesLocationRelativeToInstallationRoot =
             RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "MonoBundle/" : ".";
-        public static readonly string? nativeExecutableLocationRelativeToInstallationRoot =
+        public static readonly string? NativeExecutableLocationRelativeToInstallationRoot =
             RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "MacOS/logjoint" : null;
-        public static readonly string? startAfterUpdateEventName =
+        public static readonly string? StartAfterUpdateEventName =
             RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? null : "LogJoint.Updater.StartAfterUpdate";
     };
 }

@@ -94,7 +94,7 @@ namespace LogJoint.AutoUpdate
             );
         }
 
-        IUpdateKey IFactory.CreateUpdateKey(string appEtag, IReadOnlyDictionary<string, string> pluginsEtags)
+        IUpdateKey IFactory.CreateUpdateKey(string? appEtag, IReadOnlyDictionary<string, string?> pluginsEtags)
         {
             return new UpdateKey(appEtag, pluginsEtags);
         }

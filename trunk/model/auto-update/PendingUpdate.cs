@@ -19,8 +19,8 @@ namespace LogJoint.AutoUpdate
         readonly string tempInstallationDir;
         readonly IUpdateKey key;
         readonly LJTraceSource trace;
-        readonly Process updaterProcess;
-        readonly string autoRestartFlagFileName;
+        readonly Process? updaterProcess;
+        readonly string? autoRestartFlagFileName;
         static int pendingUpdateIdx;
 
         public static async Task<IPendingUpdate> Create(
@@ -37,7 +37,7 @@ namespace LogJoint.AutoUpdate
             LJTraceSource trace = traceSourceFactory.CreateTraceSource("AutoUpdater", $"pupd-{Interlocked.Increment(ref pendingUpdateIdx)}");
 
             string installationDir = Path.GetFullPath(
-                Path.Combine(managedAssembliesPath, Constants.installationPathRootRelativeToManagedAssembliesLocation));
+                Path.Combine(managedAssembliesPath, Constants.InstallationPathRootRelativeToManagedAssembliesLocation));
             string tempInstallationDir = GetTempInstallationDir(installationDir, tempFiles);
 
             async Task<(string tempZipFile, DownloadUpdateResult result)> Download(IUpdateDownloader updateDownloader, string name)
@@ -80,14 +80,14 @@ namespace LogJoint.AutoUpdate
             UnzipDownloadedUpdate(downloadResults[0].tempZipFile, tempInstallationDir);
 
             var newUpdateInfoPath = Path.Combine(tempInstallationDir,
-                Constants.managedAssembliesLocationRelativeToInstallationRoot, Constants.updateInfoFileName);
+                Constants.ManagedAssembliesLocationRelativeToInstallationRoot, Constants.UpdateInfoFileName);
             new UpdateInfoFileContent(downloadResults[0].result.ETag, DateTime.UtcNow, null).Write(newUpdateInfoPath);
 
             UpdatePermissions(tempInstallationDir);
 
             trace.Info("starting updater");
 
-            async Task<(Process process, string autoRestartFlagFileName)> StartUpdater()
+            async Task<(Process? process, string? autoRestartFlagFileName)> StartUpdater()
             {
                 var tempUpdaterDir = tempFiles.GenerateNewName();
                 var tempUpdaterExePath = Path.Combine(tempUpdaterDir, "logjoint.updater.exe");
@@ -97,7 +97,7 @@ namespace LogJoint.AutoUpdate
                 string firstArg;
                 string autoRestartCommandLine;
                 string autoRestartIPCKey;
-                string restartFlagFileName;
+                string? restartFlagFileName;
 
                 string[] updateAdditionalFileNames =
                 [
@@ -106,9 +106,9 @@ namespace LogJoint.AutoUpdate
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    updaterExePath = Path.Combine(installationDir, Constants.managedAssembliesLocationRelativeToInstallationRoot, "logjoint.updater.exe");
+                    updaterExePath = Path.Combine(installationDir, Constants.ManagedAssembliesLocationRelativeToInstallationRoot, "logjoint.updater.exe");
                     updaterAdditionalFiles = updateAdditionalFileNames.Select(f =>
-                        Path.Combine(installationDir, Constants.managedAssembliesLocationRelativeToInstallationRoot, f)).ToArray();
+                        Path.Combine(installationDir, Constants.ManagedAssembliesLocationRelativeToInstallationRoot, f)).ToArray();
                     var monoPath = @"/Library/Frameworks/Mono.framework/Versions/Current/bin/mono";
                     programToStart = monoPath;
                     firstArg = string.Format("\"{0}\" ", tempUpdaterExePath);
@@ -123,7 +123,7 @@ namespace LogJoint.AutoUpdate
                         Path.Combine(installationDir, "updater", f)).ToArray();
                     programToStart = tempUpdaterExePath;
                     firstArg = "";
-                    autoRestartIPCKey = Constants.startAfterUpdateEventName;
+                    autoRestartIPCKey = Constants.StartAfterUpdateEventName!;
                     autoRestartCommandLine = Path.Combine(installationDir, "logjoint.exe");
                     restartFlagFileName = null;
                 }
@@ -165,7 +165,7 @@ namespace LogJoint.AutoUpdate
                 // wait a bit to catch and log immediate updater's failure
                 for (int i = 0; i < 10 && !cancellation.IsCancellationRequested; ++i)
                 {
-                    if (process.HasExited && process.ExitCode != 0)
+                    if (process != null && process.HasExited && process.ExitCode != 0)
                     {
                         trace.Error("updater process exited abnormally with code {0}", process.ExitCode);
                         break;
@@ -179,11 +179,11 @@ namespace LogJoint.AutoUpdate
             var key = factory.CreateUpdateKey(
                 downloadResults[0].result.ETag,
                 ImmutableDictionary.CreateRange(
-                    downloadResults.Skip(1).Select(r => r.result.ETag).Zip(requiredPlugins, (etag, plugin) => new KeyValuePair<string, string>(plugin.Id, etag))
+                    downloadResults.Skip(1).Select(r => r.result.ETag).Zip(requiredPlugins, (etag, plugin) => new KeyValuePair<string, string?>(plugin.Id, etag))
                 )
             );
 
-            var pluginsFolder = Path.Combine(tempInstallationDir, Constants.managedAssembliesLocationRelativeToInstallationRoot, "Plugins");
+            var pluginsFolder = Path.Combine(tempInstallationDir, Constants.ManagedAssembliesLocationRelativeToInstallationRoot, "Plugins");
             if (Directory.Exists(pluginsFolder))
                 Directory.Delete(pluginsFolder, true);
             Directory.CreateDirectory(pluginsFolder);
@@ -195,7 +195,7 @@ namespace LogJoint.AutoUpdate
                 var pluginFolder = Path.Combine(pluginsFolder, plugin.plugin.Id);
                 UnzipDownloadedUpdate(plugin.downloadResult.tempZipFile, pluginFolder);
                 new UpdateInfoFileContent(plugin.downloadResult.result.ETag, plugin.downloadResult.result.LastModifiedUtc, null).Write(
-                    Path.Combine(pluginFolder, Constants.updateInfoFileName));
+                    Path.Combine(pluginFolder, Constants.UpdateInfoFileName));
 
                 try
                 {
@@ -212,7 +212,7 @@ namespace LogJoint.AutoUpdate
 
             CopyCustomFormats(
                 managedAssembliesPath,
-                Path.Combine(tempInstallationDir, Constants.managedAssembliesLocationRelativeToInstallationRoot),
+                Path.Combine(tempInstallationDir, Constants.ManagedAssembliesLocationRelativeToInstallationRoot),
                 pluginFormats, // Temporary measure: plugin formats used to be copied to root Formats folder. Ignore them on update.
                 trace
             );
@@ -224,8 +224,8 @@ namespace LogJoint.AutoUpdate
             string tempInstallationDir,
             IUpdateKey key,
             LJTraceSource trace,
-            Process updaterProcess,
-            string autoRestartFlagFileName
+            Process? updaterProcess,
+            string? autoRestartFlagFileName
         )
         {
             this.tempInstallationDir = tempInstallationDir;
@@ -240,9 +240,12 @@ namespace LogJoint.AutoUpdate
         async Task IPendingUpdate.Dispose()
         {
             trace.Info("Disposing");
-            var updaterTask = updaterProcess.GetExitCodeAsync(TimeSpan.FromSeconds(10));
-            updaterProcess.Kill();
-            await updaterTask;
+            if (updaterProcess != null)
+            {
+                var updaterTask = updaterProcess.GetExitCodeAsync(TimeSpan.FromSeconds(10));
+                updaterProcess.Kill();
+                await updaterTask;
+            }
             if (Directory.Exists(tempInstallationDir))
             {
                 trace.Info("Deleting temp update folder");
@@ -272,8 +275,8 @@ namespace LogJoint.AutoUpdate
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                EventWaitHandle evt;
-                if (!EventWaitHandle.TryOpenExisting(Constants.startAfterUpdateEventName, out evt))
+                EventWaitHandle? evt;
+                if (!EventWaitHandle.TryOpenExisting(Constants.StartAfterUpdateEventName!, out evt))
                     return false;
                 evt.Set();
                 return true;
@@ -310,7 +313,7 @@ namespace LogJoint.AutoUpdate
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 var executablePath = Path.Combine(installationDir,
-                    Constants.nativeExecutableLocationRelativeToInstallationRoot);
+                    Constants.NativeExecutableLocationRelativeToInstallationRoot!);
                 IOUtils.EnsureIsExecutable(executablePath);
             }
         }

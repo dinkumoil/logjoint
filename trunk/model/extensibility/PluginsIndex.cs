@@ -12,7 +12,7 @@ namespace LogJoint.Extensibility
     public class PluginsIndex : IPluginsIndex
     {
         readonly IReadOnlyList<IPluginIndexItem> items;
-        readonly string etag;
+        readonly string? etag;
 
         public class Factory : IPluginsIndexFactory
         {
@@ -23,18 +23,18 @@ namespace LogJoint.Extensibility
                 this.telemetryCollector = telemetryCollector;
             }
 
-            IPluginsIndex IPluginsIndexFactory.Create(Stream stream, string etag)
+            IPluginsIndex IPluginsIndexFactory.Create(Stream stream, string? etag)
             {
                 return new PluginsIndex(stream, etag, telemetryCollector);
             }
         };
 
-        private PluginsIndex(Stream stream, string etag, Telemetry.ITelemetryCollector telemetryCollector)
+        private PluginsIndex(Stream stream, string? etag, Telemetry.ITelemetryCollector telemetryCollector)
             : this(XDocument.Load(stream), etag, telemetryCollector)
         {
         }
 
-        private PluginsIndex(XDocument doc, string etag, Telemetry.ITelemetryCollector telemetryCollector)
+        private PluginsIndex(XDocument doc, string? etag, Telemetry.ITelemetryCollector telemetryCollector)
         {
             this.etag = etag;
 
@@ -80,7 +80,7 @@ namespace LogJoint.Extensibility
         }
 
         IReadOnlyList<IPluginIndexItem> IPluginsIndex.Plugins => items;
-        string IPluginsIndex.ETag => etag;
+        string? IPluginsIndex.ETag => etag;
 
         class Item : IPluginIndexItem
         {
