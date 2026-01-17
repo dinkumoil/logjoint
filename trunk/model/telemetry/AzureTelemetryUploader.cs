@@ -14,12 +14,12 @@ namespace LogJoint.Telemetry
     public class AzureTelemetryUploader : ITelemetryUploader
     {
         readonly LJTraceSource trace;
-        readonly string telemetryUrl, issuesUrl;
+        readonly string? telemetryUrl, issuesUrl;
 
         public AzureTelemetryUploader(
             ITraceSourceFactory traceSourceFactory,
-            string telemetryUrl,
-            string issuesUrl
+            string? telemetryUrl,
+            string? issuesUrl
         )
         {
             this.trace = traceSourceFactory.CreateTraceSource("Telemetry");
@@ -62,8 +62,8 @@ namespace LogJoint.Telemetry
                 JsonSerializer.CreateDefault().Serialize(requestWriter, new Dictionary<string, string>()
                 {
                     { "PartitionKey", recordTimestamp.ToString("s") }, // PK = timestamp in sortable format
-					{ "RowKey", recordId }, // RK = telemetry record ID
-				}.Union(fields).ToDictionary(r => r.Key, r => r.Value));
+                    { "RowKey", recordId }, // RK = telemetry record ID
+                }.Union(fields).ToDictionary(r => r.Key, r => r.Value));
             }
             using (var response = (HttpWebResponse)await request.GetResponseNoException().WithCancellation(cancellation))
             {

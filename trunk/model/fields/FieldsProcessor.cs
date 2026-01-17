@@ -58,14 +58,14 @@ namespace LogJoint.FieldsProcessor
         {
             readonly Task<Persistence.IStorageEntry> cacheEntryTask;
             readonly Telemetry.ITelemetryCollector telemetryCollector;
-            readonly IUserCodeAssemblyProvider userCodeAssemblyProvider;
+            readonly IUserCodeAssemblyProvider? userCodeAssemblyProvider;
             readonly IAssemblyLoader assemblyLoader;
 
             public Factory(
                 Persistence.IStorageManager storageManager,
                 Telemetry.ITelemetryCollector telemetryCollector,
-                IUserCodeAssemblyProvider userCodeAssemblyProvider,
-                IAssemblyLoader assemblyLoader
+                IUserCodeAssemblyProvider? userCodeAssemblyProvider,
+                IAssemblyLoader? assemblyLoader
             )
             {
                 this.cacheEntryTask = storageManager.GetEntry("user-code-cache", 0x81012232);
@@ -142,7 +142,7 @@ namespace LogJoint.FieldsProcessor
             Persistence.IStorageEntry cacheEntry,
             LJTraceSource trace,
             Telemetry.ITelemetryCollector telemetryCollector,
-            IUserCodeAssemblyProvider userCodeAssemblyProvider,
+            IUserCodeAssemblyProvider? userCodeAssemblyProvider,
             byte[] precompiledAssembly,
             IAssemblyLoader assemblyLoader
         )
@@ -320,7 +320,7 @@ namespace LogJoint.FieldsProcessor
         readonly Persistence.IStorageEntry cacheEntry;
         readonly Telemetry.ITelemetryCollector telemetryCollector;
         readonly LJTraceSource trace;
-        readonly IUserCodeAssemblyProvider userCodeAssemblyProvider;
+        readonly IUserCodeAssemblyProvider? userCodeAssemblyProvider;
         readonly IAssemblyLoader assemblyLoader;
         readonly byte[] precompiledAssembly;
 

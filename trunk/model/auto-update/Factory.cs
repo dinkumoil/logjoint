@@ -12,12 +12,11 @@ namespace LogJoint.AutoUpdate
         readonly MultiInstance.IInstancesCounter mutualExecutionCounter;
         readonly IShutdown shutdown;
         readonly ISynchronizationContext synchronizationContext;
-        readonly Persistence.IFirstStartDetector firstStartDetector;
         readonly Telemetry.ITelemetryCollector telemetry;
         readonly Persistence.IStorageManager storage;
         readonly IChangeNotification changeNotification;
-        readonly string autoUpdateUrl;
-        readonly string pluginsIndexUrl;
+        readonly string? autoUpdateUrl;
+        readonly string? pluginsIndexUrl;
 
         public Factory(
             ITempFilesManager tempFiles,
@@ -25,12 +24,11 @@ namespace LogJoint.AutoUpdate
             MultiInstance.IInstancesCounter mutualExecutionCounter,
             IShutdown shutdown,
             ISynchronizationContext synchronizationContext,
-            Persistence.IFirstStartDetector firstStartDetector,
             Telemetry.ITelemetryCollector telemetry,
             Persistence.IStorageManager storage,
             IChangeNotification changeNotification,
-            string autoUpdateUrl,
-            string pluginsIndexUrl
+            string? autoUpdateUrl,
+            string? pluginsIndexUrl
         )
         {
             this.tempFiles = tempFiles;
@@ -38,7 +36,6 @@ namespace LogJoint.AutoUpdate
             this.shutdown = shutdown;
             this.synchronizationContext = synchronizationContext;
             this.mutualExecutionCounter = mutualExecutionCounter;
-            this.firstStartDetector = firstStartDetector;
             this.telemetry = telemetry;
             this.storage = storage;
             this.changeNotification = changeNotification;

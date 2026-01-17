@@ -10,7 +10,7 @@ namespace LogJoint
 {
     public class DirectoryFormatsRepository : IFormatDefinitionsRepository
     {
-        public DirectoryFormatsRepository(string directoryPath, string[] additionalDirectories = null)
+        public DirectoryFormatsRepository(string? directoryPath, string[]? additionalDirectories = null)
         {
             this.directoryPaths.Add(string.IsNullOrEmpty(directoryPath) ? DefaultRepositoryLocation : directoryPath);
             if (additionalDirectories != null)

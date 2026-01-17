@@ -17,7 +17,7 @@ namespace LogJoint.Preprocessing
         readonly ICredentialsCache credCache;
         readonly ILogProviderFactoryRegistry logProviderFactoryRegistry;
         readonly WebViewTools.IWebViewTools webViewTools;
-        readonly ILogsDownloaderConfig logsDownloaderConfig;
+        readonly ILogsDownloaderConfig? logsDownloaderConfig;
         readonly LogMedia.IFileSystem fileSystem;
 
         public PreprocessingStepsFactory(
@@ -30,7 +30,7 @@ namespace LogJoint.Preprocessing
             ICredentialsCache credCache,
             ILogProviderFactoryRegistry logProviderFactoryRegistry,
             WebViewTools.IWebViewTools webBrowserDownloader,
-            ILogsDownloaderConfig logsDownloaderConfig,
+            ILogsDownloaderConfig? logsDownloaderConfig,
             LogMedia.IFileSystem fileSystem
         )
         {

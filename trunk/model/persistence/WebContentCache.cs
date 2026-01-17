@@ -7,9 +7,9 @@ namespace LogJoint.Persistence
     public class WebContentCache : IWebContentCache
     {
         readonly IContentCache rawContentCache;
-        readonly IWebContentCacheConfig config;
+        readonly IWebContentCacheConfig? config;
 
-        public WebContentCache(IContentCache rawContentCache, IWebContentCacheConfig config)
+        public WebContentCache(IContentCache rawContentCache, IWebContentCacheConfig? config)
         {
             this.rawContentCache = rawContentCache;
             this.config = config;
@@ -17,14 +17,14 @@ namespace LogJoint.Persistence
 
         Task<Stream> IWebContentCache.GetValue(Uri uri)
         {
-            if (config.IsCachingForcedForHost(uri.Host.ToLower()))
+            if (config != null && config.IsCachingForcedForHost(uri.Host.ToLower()))
                 return rawContentCache.GetValue(MakeCacheKey(uri));
             return Task.FromResult<Stream>(null);
         }
 
         async Task IWebContentCache.SetValue(Uri uri, Stream data)
         {
-            if (config.IsCachingForcedForHost(uri.Host.ToLower()))
+            if (config != null && config.IsCachingForcedForHost(uri.Host.ToLower()))
                 await rawContentCache.SetValue(MakeCacheKey(uri), data);
         }
 

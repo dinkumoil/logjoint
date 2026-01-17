@@ -50,33 +50,33 @@ namespace LogJoint
         required public RegularExpressions.IRegexFactory RegexFactory { get; init; }
         required public FieldsProcessor.IFactory FieldsProcessorFactory { get; init; }
         required public LogMedia.IFileSystem FileSystem { get; init; }
-        required public Settings.IDebugAgentConfig DebugAgentConfig { get; init; }
+        required public Settings.IDebugAgentConfig? DebugAgentConfig { get; init; }
 
         required public IAnnotationsRegistry AnnotationsRegistry { get; init; }
     };
 
     public class ModelConfig
     {
-        public string WorkspacesUrl;
-        public string TelemetryUrl;
-        public string IssuesUrl;
-        public string AutoUpdateUrl;
-        public string PluginsUrl;
-        public Persistence.IWebContentCacheConfig WebContentCacheConfig;
-        public Preprocessing.ILogsDownloaderConfig LogsDownloaderConfig;
-        public string AppDataDirectory;
-        public TraceListener[] TraceListeners;
+        public string? WorkspacesUrl;
+        public string? TelemetryUrl;
+        public string? IssuesUrl;
+        public string? AutoUpdateUrl;
+        public string? PluginsUrl;
+        public Persistence.IWebContentCacheConfig? WebContentCacheConfig;
+        public Preprocessing.ILogsDownloaderConfig? LogsDownloaderConfig;
+        public string? AppDataDirectory;
+        public TraceListener[]? TraceListeners;
         public bool RemoveDefaultTraceListener;
         public bool DisableLogjointInstancesCounting;
-        public string[] AdditionalFormatDirectories;
-        public System.Reflection.Assembly FormatsRepositoryAssembly;
-        public LogMedia.IFileSystem FileSystem;
-        public FieldsProcessor.IUserCodeAssemblyProvider UserCodeAssemblyProvider;
-        public FieldsProcessor.IAssemblyLoader FieldsProcessorAssemblyLoader;
-        public Persistence.Implementation.IFileSystemAccess PersistenceFileSystem;
-        public Persistence.Implementation.IFileSystemAccess ContentCacheFileSystem;
+        public string[]? AdditionalFormatDirectories;
+        public System.Reflection.Assembly? FormatsRepositoryAssembly;
+        public LogMedia.IFileSystem? FileSystem;
+        public FieldsProcessor.IUserCodeAssemblyProvider? UserCodeAssemblyProvider;
+        public FieldsProcessor.IAssemblyLoader? FieldsProcessorAssemblyLoader;
+        public Persistence.Implementation.IFileSystemAccess? PersistenceFileSystem;
+        public Persistence.Implementation.IFileSystemAccess? ContentCacheFileSystem;
         public bool IsDebugAgentEnabled;
-        public string DebugAgentConfigComment;
+        public string? DebugAgentConfigComment;
     };
 
     public static class ModelFactory
@@ -139,7 +139,7 @@ namespace LogJoint
             IFiltersFactory filtersFactory = new FiltersFactory(changeNotification, regexFactory);
             IBookmarksFactory bookmarksFactory = new BookmarksFactory(changeNotification);
             var bookmarks = bookmarksFactory.CreateBookmarks();
-            Persistence.IFirstStartDetector firstStartDetector = persistentUserDataFileSystem as Persistence.IFirstStartDetector;
+            Persistence.IFirstStartDetector firstStartDetector = (Persistence.IFirstStartDetector)persistentUserDataFileSystem;
             Persistence.Implementation.IStorageManagerImplementation contentCacheStorage = new Persistence.Implementation.StorageManagerImplementation();
             Persistence.Implementation.IFileSystemAccess contentCacheUserDataFileSystem =
                 config.ContentCacheFileSystem ?? Persistence.Implementation.DesktopFileSystemAccess.CreateCacheFileSystemAccess(config.AppDataDirectory);
@@ -149,8 +149,8 @@ namespace LogJoint
                  new Persistence.ContentCacheManager.ConfigAccess(globalSettingsAccessor)
             );
             Persistence.IContentCache contentCache = new Persistence.ContentCacheManager(traceSourceFactory, contentCacheStorage);
-            Persistence.IWebContentCacheConfig webContentCacheConfig = config.WebContentCacheConfig;
-            Preprocessing.ILogsDownloaderConfig logsDownloaderConfig = config.LogsDownloaderConfig;
+            Persistence.IWebContentCacheConfig? webContentCacheConfig = config.WebContentCacheConfig;
+            Preprocessing.ILogsDownloaderConfig? logsDownloaderConfig = config.LogsDownloaderConfig;
             Persistence.IWebContentCache webContentCache = new Persistence.WebContentCache(
                 contentCache,
                 webContentCacheConfig
@@ -347,7 +347,6 @@ namespace LogJoint
                 instancesCounter,
                 shutdown,
                 modelSynchronizationContext,
-                firstStartDetector,
                 telemetryCollector,
                 storageManager,
                 changeNotification,
@@ -382,7 +381,7 @@ namespace LogJoint
             config.UserCodeAssemblyProvider?.SetPluginsManager(pluginsManager);
             AutoUpdate.IAutoUpdater autoUpdater = autoUpdateFactory.CreateAutoUpdater(pluginsManager);
 
-            IDebugAgentConfig debugAgentConfig = config.IsDebugAgentEnabled ? new DebugAgentConfig(
+            IDebugAgentConfig? debugAgentConfig = config.IsDebugAgentEnabled ? new DebugAgentConfig(
                 changeNotification, storageManager, config.DebugAgentConfigComment) : null;
 
             Model expensibilityModel = new Model(

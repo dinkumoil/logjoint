@@ -80,7 +80,7 @@ namespace LogJoint
                 BookmarksChangedEventArgs.ChangeType.Annotation, [bookmark]));
         }
 
-        class BookmarksHandler : IBookmarksHandler, IComparer<IBookmark>
+        class BookmarksHandler : IBookmarksHandler, IComparer<IBookmark?>
         {
             public BookmarksHandler(Bookmarks owner)
             {
@@ -103,8 +103,8 @@ namespace LogJoint
                     this.position = l.Position;
                     this.lineIndex = lineIndex;
 
-                    bool ret = items.BinarySearch(begin, end - begin, null, this) >= 0;
-                    return ret;
+                    List<IBookmark?> bookmarks = items!;
+                    return bookmarks.BinarySearch(begin, end - begin, null, this) >= 0;
                 }
 
                 return false;

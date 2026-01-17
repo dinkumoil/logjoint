@@ -13,7 +13,7 @@ namespace LogJoint.Preprocessing
             Progress.IProgressAggregator progressAgg,
             Persistence.IWebContentCache cache,
             WebViewTools.IWebViewTools webBrowserDownloader,
-            ILogsDownloaderConfig config,
+            ILogsDownloaderConfig? config,
             IStepsFactory preprocessingStepsFactory
         )
         {
@@ -61,14 +61,14 @@ namespace LogJoint.Preprocessing
                 }
 
                 var uri = new Uri(sourceFile.Location);
-                LogDownloaderRule logDownloaderRule;
+                LogDownloaderRule? logDownloaderRule;
                 using (var cachedValue = await cache.GetValue(uri))
                 {
                     if (cachedValue != null)
                     {
                         await writeToTempFile(cachedValue, cachedValue.Length, "Loading from cache");
                     }
-                    else if ((logDownloaderRule = config.GetLogDownloaderConfig(uri)) != null && logDownloaderRule.UseWebBrowserDownloader)
+                    else if ((logDownloaderRule = config?.GetLogDownloaderConfig(uri)) != null && logDownloaderRule.UseWebBrowserDownloader)
                     {
                         using var stream = await webBrowserDownloader.Download(new WebViewTools.DownloadParams()
                         {
@@ -108,7 +108,7 @@ namespace LogJoint.Preprocessing
         readonly Progress.IProgressAggregator progressAggregator;
         readonly Persistence.IWebContentCache cache;
         readonly WebViewTools.IWebViewTools webBrowserDownloader;
-        readonly ILogsDownloaderConfig config;
+        readonly ILogsDownloaderConfig? config;
         internal const string name = "download";
     };
 }

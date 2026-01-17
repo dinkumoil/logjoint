@@ -5,9 +5,9 @@ namespace LogJoint.Settings
 {
     public interface IDebugAgentConfig
     {
-        string AgentAddress { get; }
+        string? AgentAddress { get; }
 
-        string ConfigComment { get; }
+        string? ConfigComment { get; }
 
         Task UpdateAddress(string value);
 
@@ -18,12 +18,12 @@ namespace LogJoint.Settings
     {
         private readonly IChangeNotification changeNotification;
         private readonly Persistence.IStorageManager storage;
-        private string address = null;
-        private string configComment = null;
+        private string? address = null;
+        private string? configComment = null;
         private Task sequence;
 
         public DebugAgentConfig(IChangeNotification changeNotification,
-            Persistence.IStorageManager storage, string configComment)
+            Persistence.IStorageManager storage, string? configComment)
         {
             this.changeNotification = changeNotification;
             this.storage = storage;
@@ -32,9 +32,9 @@ namespace LogJoint.Settings
         }
 
 
-        string IDebugAgentConfig.AgentAddress => address;
+        string? IDebugAgentConfig.AgentAddress => address;
 
-        string IDebugAgentConfig.ConfigComment => configComment;
+        string? IDebugAgentConfig.ConfigComment => configComment;
 
         Task IDebugAgentConfig.Refresh()
         {
@@ -68,9 +68,10 @@ namespace LogJoint.Settings
             changeNotification.Post();
             var storageEntry = await storage.GetEntry("debug-agent");
             await using var section = await storageEntry.OpenXMLSection("settings", Persistence.StorageSectionOpenFlag.ReadWrite);
-            if (section.Data.Root == null)
-                section.Data.Add(new XElement("settings"));
-            section.Data.Root.SetAttributeValue("address", value);
+            var root = section.Data.Root;
+            if (root == null)
+                section.Data.Add(root = new XElement("settings"));
+            root.SetAttributeValue("address", value);
         }
     }
 }

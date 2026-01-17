@@ -1,28 +1,30 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Net;
-using System.Globalization;
 
 namespace LogJoint.AutoUpdate
 {
     public class AzureUpdateDownloader : IUpdateDownloader
     {
-        readonly string autoUpdateUrl;
-        readonly bool isConfigured;
+        readonly string? autoUpdateUrl;
         readonly LJTraceSource trace;
 
-        public AzureUpdateDownloader(ITraceSourceFactory traceSourceFactory, string autoUpdateUrl, string updateType)
+        [MemberNotNullWhen(true, nameof(autoUpdateUrl))]
+        private bool IsConfigured => !string.IsNullOrEmpty(autoUpdateUrl);
+
+        public AzureUpdateDownloader(ITraceSourceFactory traceSourceFactory, string? autoUpdateUrl, string updateType)
         {
             this.trace = traceSourceFactory.CreateTraceSource("AutoUpdater", $"az-dwnld-{updateType}");
             this.autoUpdateUrl = autoUpdateUrl;
-            isConfigured = !string.IsNullOrEmpty(autoUpdateUrl);
         }
 
         bool IUpdateDownloader.IsDownloaderConfigured
         {
-            get { return isConfigured; }
+            get { return IsConfigured; }
         }
 
         async Task<DownloadUpdateResult> IUpdateDownloader.DownloadUpdate(string? etag, Stream targetStream, CancellationToken cancellation)
@@ -53,7 +55,7 @@ namespace LogJoint.AutoUpdate
 
         async Task<DownloadUpdateResult> DownloadUpdateInternal(string? etag, Stream? targetStream, CancellationToken cancellation)
         {
-            if (!isConfigured)
+            if (!IsConfigured)
                 return new DownloadUpdateResult() { Status = DownloadUpdateResult.StatusCode.Failure };
 
             var request = HttpWebRequest.CreateHttp(autoUpdateUrl);
