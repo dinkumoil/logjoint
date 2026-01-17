@@ -12,7 +12,7 @@ namespace LogJoint
         {
             public static readonly XmlInitializationParams Empty = new XmlInitializationParams(null);
 
-            public XmlInitializationParams(XElement extensionsNode)
+            public XmlInitializationParams(XElement? extensionsNode)
             {
                 if (extensionsNode == null)
                     return;
@@ -56,7 +56,7 @@ namespace LogJoint
             readonly List<InitializationDataItem> items = new List<InitializationDataItem>();
         };
 
-        public MessagesReaderExtensions(IMessagesReader owner, XmlInitializationParams initializationData = null)
+        public MessagesReaderExtensions(IMessagesReader? owner, XmlInitializationParams? initializationData = null)
         {
             this.owner = owner;
             if (initializationData != null)
@@ -194,8 +194,8 @@ namespace LogJoint
                 throw new InvalidOperationException("Operation is not allowed for extensions collection that is not connected to a messages reader");
         }
 
-        readonly IMessagesReader owner;
-        readonly List<ExtensionDataInternal> items = new List<ExtensionDataInternal>();
+        readonly IMessagesReader? owner;
+        readonly List<ExtensionDataInternal> items = new();
         bool attached;
 
         #endregion

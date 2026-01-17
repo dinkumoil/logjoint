@@ -40,7 +40,7 @@ namespace LogJoint
             List<string> inputFieldNames,
             List<ExtensionInfo> extensions,
             List<OutputFieldStruct> outputFields,
-            string assemblyName)
+            string? assemblyName)
         {
             using var perfop = new Profiling.Operation(trace, "compile user code");
             string fullCode = MakeMessagesBuilderCode(inputFieldNames, extensions, outputFields);

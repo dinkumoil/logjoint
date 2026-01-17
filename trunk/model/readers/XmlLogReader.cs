@@ -1,13 +1,14 @@
-using System;
-using System.Text;
-using System.IO;
-using System.Xml;
-using System.Xml.Xsl;
-using System.Collections.Generic;
 using LogJoint.RegularExpressions;
-using System.Xml.Linq;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Xsl;
 
 namespace LogJoint.XmlFormat
 {
@@ -50,7 +51,7 @@ namespace LogJoint.XmlFormat
             WriteString(Convert.ToBase64String(buffer, index, count));
         }
 
-        public override void WriteCData(string text)
+        public override void WriteCData(string? text)
         {
             WriteString(text);
         }
@@ -65,11 +66,11 @@ namespace LogJoint.XmlFormat
             WriteString(new string(buffer, index, count));
         }
 
-        public override void WriteComment(string text)
+        public override void WriteComment(string? text)
         {
         }
 
-        public override void WriteDocType(string name, string pubid, string sysid, string subset)
+        public override void WriteDocType(string name, string? pubid, string? sysid, string? subset)
         {
         }
 
@@ -83,7 +84,7 @@ namespace LogJoint.XmlFormat
             WriteEndElement();
         }
 
-        public override void WriteProcessingInstruction(string name, string text)
+        public override void WriteProcessingInstruction(string name, string? text)
         {
         }
 
@@ -115,12 +116,12 @@ namespace LogJoint.XmlFormat
             WriteString(new string(buf));
         }
 
-        public override void WriteWhitespace(string ws)
+        public override void WriteWhitespace(string? ws)
         {
             WriteString(ws);
         }
 
-        public override void WriteStartElement(string prefix, string localName, string ns)
+        public override void WriteStartElement(string? prefix, string localName, string? ns)
         {
             states.Push(WriteState.Element);
 
@@ -189,7 +190,7 @@ namespace LogJoint.XmlFormat
             Reset();
         }
 
-        public override void WriteStartAttribute(string prefix, string localName, string ns)
+        public override void WriteStartAttribute(string? prefix, string localName, string? ns)
         {
             states.Push(WriteState.Attribute);
 
@@ -267,12 +268,12 @@ namespace LogJoint.XmlFormat
             get { return states.Peek(); }
         }
 
-        public override void WriteString(string text)
+        public override void WriteString(string? text)
         {
             content.Append(text);
         }
 
-        public Message GetOutput()
+        public Message? GetOutput()
         {
             return output;
         }
@@ -285,20 +286,20 @@ namespace LogJoint.XmlFormat
         }
 
         readonly Stack<WriteState> states = new Stack<WriteState>();
-        string elemName;
-        string attribName;
-        IThread thread;
+        string? elemName;
+        string? attribName;
+        IThread? thread;
         MessageTimestamp dateTime;
         readonly StringBuilder content = new StringBuilder();
         SeverityFlag severity = SeverityFlag.Info;
-        Message output;
+        Message? output;
         readonly FieldsProcessor.IMessagesBuilderCallback callback;
         readonly ITimeOffsets timeOffsets;
         readonly int? maxLineLen;
         readonly bool useEmbeddedAttributes;
         long? embeddedPositon;
         long? embeddedEndPositon;
-        string embeddedRawText;
+        string? embeddedRawText;
     };
 
     public class LogJointXSLExtension : UserCodeHelperFunctions
@@ -319,17 +320,18 @@ namespace LogJoint.XmlFormat
 
     class XmlFormatInfo : StreamBasedFormatInfo
     {
-        public readonly XslCompiledTransform Transform;
+        public readonly XslCompiledTransform? Transform;
         public readonly string NSDeclaration = "";
         public readonly string Encoding;
         public readonly LoadedRegex HeadRe;
         public readonly LoadedRegex BodyRe;
-        public readonly BoundFinder BeginFinder;
-        public readonly BoundFinder EndFinder;
+        public readonly BoundFinder? BeginFinder;
+        public readonly BoundFinder? EndFinder;
         public readonly TextStreamPositioningParams TextStreamPositioningParams;
         public readonly StreamReorderingParams? DejitteringParams;
         public readonly IFormatViewOptions ViewOptions;
 
+        [MemberNotNullWhen(false, nameof(Transform))]
         public bool IsNativeFormat { get { return Transform == null; } }
 
         public static XmlFormatInfo MakeNativeFormatInfo(string encoding, StreamReorderingParams? dejitteringParams,
@@ -344,7 +346,7 @@ namespace LogJoint.XmlFormat
                 null, null, encoding, null, textStreamPositioningParams, dejitteringParams, viewOptions);
         }
 
-        public XmlFormatInfo(XmlNode xsl, LoadedRegex headRe, LoadedRegex bodyRe, BoundFinder beginFinder, BoundFinder endFinder, string encoding, MessagesReaderExtensions.XmlInitializationParams extensionsInitData,
+        public XmlFormatInfo(XmlNode? xsl, LoadedRegex headRe, LoadedRegex bodyRe, BoundFinder? beginFinder, BoundFinder? endFinder, string encoding, MessagesReaderExtensions.XmlInitializationParams? extensionsInitData,
                 TextStreamPositioningParams textStreamPositioningParams, StreamReorderingParams? dejitteringParams, IFormatViewOptions viewOptions) :
             base(extensionsInitData)
         {
@@ -360,15 +362,19 @@ namespace LogJoint.XmlFormat
             if (xsl != null)
             {
                 Dictionary<string, string> nsTable = new Dictionary<string, string>();
-                foreach (XmlAttribute ns in xsl.SelectNodes(".//namespace::*"))
+                XmlNodeList? nodes = xsl.SelectNodes(".//namespace::*");
+                if (nodes != null)
                 {
-                    if (ns.Value == "http://www.w3.org/XML/1998/namespace")
-                        continue;
-                    if (ns.Value == "http://www.w3.org/1999/XSL/Transform")
-                        continue;
-                    if (ns.Value == Properties.LogJointNS)
-                        continue;
-                    nsTable[ns.Name] = ns.Value;
+                    foreach (XmlAttribute ns in nodes)
+                    {
+                        if (ns.Value == "http://www.w3.org/XML/1998/namespace")
+                            continue;
+                        if (ns.Value == "http://www.w3.org/1999/XSL/Transform")
+                            continue;
+                        if (ns.Value == Properties.LogJointNS)
+                            continue;
+                        nsTable[ns.Name] = ns.Value;
+                    }
                 }
 
                 StringBuilder nsdeclBuilder = new StringBuilder();
@@ -423,7 +429,7 @@ namespace LogJoint.XmlFormat
 
         protected override Encoding DetectStreamEncoding(Stream stream)
         {
-            Encoding ret = EncodingUtils.GetEncodingFromConfigXMLName(formatInfo.Encoding, Trace);
+            Encoding? ret = EncodingUtils.GetEncodingFromConfigXMLName(formatInfo.Encoding, Trace);
             if (ret != null)
                 return ret;
             if (formatInfo.Encoding == "BOM")
@@ -433,9 +439,9 @@ namespace LogJoint.XmlFormat
             else if (formatInfo.Encoding == "PI")
             {
                 ret = EncodingUtils.DetectEncodingFromProcessingInstructions(stream);
-                if (ret == null)
-                    ret = EncodingUtils.DetectEncodingFromBOM(stream, Encoding.UTF8);
             }
+            if (ret == null)
+                ret = EncodingUtils.DetectEncodingFromBOM(stream, Encoding.UTF8);
             return ret;
         }
 
@@ -452,7 +458,7 @@ namespace LogJoint.XmlFormat
             return xrs;
         }
 
-        static IMessage MakeMessageInternal(TextMessageCapture capture, XmlFormatInfo formatInfo, IRegex bodyRe, ref IMatch bodyReMatch,
+        static IMessage? MakeMessageInternal(TextMessageCapture capture, XmlFormatInfo formatInfo, IRegex bodyRe, ref IMatch? bodyReMatch,
             MessagesBuilderCallback callback, XsltArgumentList transformArgs, ITimeOffsets timeOffsets, bool useEmbeddedAttributes)
         {
             int nrOfSequentialFailures = 0;
@@ -531,7 +537,7 @@ namespace LogJoint.XmlFormat
 
         MessagesBuilderCallback CreateMessageBuilderCallback()
         {
-            IThread fakeThread = null;
+            IThread? fakeThread = null;
             //fakeThread = threads.GetThread("");
             return new MessagesBuilderCallback(threads, fakeThread);
         }
@@ -542,7 +548,7 @@ namespace LogJoint.XmlFormat
             readonly MessagesBuilderCallback callback;
             readonly IRegex bodyRegex;
 
-            IMatch bodyMatch;
+            IMatch? bodyMatch;
 
             public SingleThreadedStrategyImpl(MessagesReader reader) :
                 base(reader.LogMedia, reader.StreamEncoding, reader.formatInfo.HeadRe.Regex,
@@ -556,7 +562,7 @@ namespace LogJoint.XmlFormat
             {
                 return base.ParserCreated(p);
             }
-            protected override IMessage MakeMessage(TextMessageCapture capture)
+            protected override IMessage? MakeMessage(TextMessageCapture capture)
             {
                 return MakeMessageInternal(capture, reader.formatInfo, bodyRegex, ref bodyMatch, callback,
                     reader.transformArgs, reader.TimeOffsets, reader.useEmbeddedAttributes);
@@ -571,8 +577,8 @@ namespace LogJoint.XmlFormat
         class ProcessingThreadLocalData
         {
             public LoadedRegex bodyRe;
-            public IMatch bodyMatch;
-            public MessagesBuilderCallback callback;
+            public IMatch? bodyMatch;
+            required public MessagesBuilderCallback callback;
         }
 
         class MultiThreadedStrategyImpl : StreamReadingStrategies.MultiThreadedStrategy<ProcessingThreadLocalData>
@@ -589,7 +595,7 @@ namespace LogJoint.XmlFormat
             {
                 return base.ParserCreated(p);
             }
-            public override IMessage MakeMessage(TextMessageCapture capture, ProcessingThreadLocalData threadLocal)
+            public override IMessage? MakeMessage(TextMessageCapture capture, ProcessingThreadLocalData threadLocal)
             {
                 return MakeMessageInternal(capture, reader.formatInfo, threadLocal.bodyRe.Regex,
                     ref threadLocal.bodyMatch, threadLocal.callback, reader.transformArgs, reader.TimeOffsets, reader.useEmbeddedAttributes);
@@ -799,7 +805,7 @@ namespace LogJoint.XmlFormat
                 XmlDocument tmpDoc = new XmlDocument();
                 tmpDoc.LoadXml(formatSpecificNode.ToString());
                 XmlElement xsl =
-                    tmpDoc.DocumentElement.SelectSingleNode("xsl:stylesheet", nsMgr) as XmlElement ??
+                    tmpDoc.DocumentElement?.SelectSingleNode("xsl:stylesheet", nsMgr) as XmlElement ??
                     throw new Exception("Wrong XML-based format definition: xsl:stylesheet is not defined");
 
                 MessagesReaderExtensions.XmlInitializationParams extensionsInitData =

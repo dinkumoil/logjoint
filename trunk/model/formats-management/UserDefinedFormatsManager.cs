@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace LogJoint
@@ -32,7 +31,7 @@ namespace LogJoint
             nodeNameToFactory.Add(configNodeName, factory);
         }
 
-        IUserDefinedFactory IUserDefinedFormatsManagerInternal.CreateFactory(string configNodeName, UserDefinedFactoryParams @params)
+        IUserDefinedFactory? IUserDefinedFormatsManagerInternal.CreateFactory(string configNodeName, UserDefinedFactoryParams @params)
         {
             return nodeNameToFactory.TryGetValue(configNodeName, out var factoryFunc) ? factoryFunc(@params) : null;
         }
@@ -86,6 +85,8 @@ namespace LogJoint
             foreach (var formatFile in manifest.Files.Where(f => f.Type == Extensibility.PluginFileType.FormatDefinition))
             {
                 var root = XDocument.Load(formatFile.AbsolutePath).Element("format");
+                if (root == null)
+                    continue;
                 pluginFactories.AddRange(
                     from factoryNodeCandidate in root.Elements()
                     where nodeNameToFactory.ContainsKey(factoryNodeCandidate.Name.LocalName)
@@ -122,9 +123,11 @@ namespace LogJoint
             return ListUtils.RemoveAll(factories, f => f.markedForDeletion);
         }
 
-        FactoryRecord LoadFactory(IFormatDefinitionRepositoryEntry entry)
+        FactoryRecord? LoadFactory(IFormatDefinitionRepositoryEntry entry)
         {
             var root = entry.LoadFormatDescription();
+            if (root == null)
+                return null;
             return (
                 from factoryNodeCandidate in root.Elements()
                 where nodeNameToFactory.ContainsKey(factoryNodeCandidate.Name.LocalName)
@@ -146,7 +149,7 @@ namespace LogJoint
 
         class FactoryRecord
         {
-            public IUserDefinedFactory factory;
+            required public IUserDefinedFactory factory;
             public DateTime lastModified;
             public bool markedForDeletion;
         };

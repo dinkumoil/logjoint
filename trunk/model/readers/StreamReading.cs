@@ -78,13 +78,13 @@ namespace LogJoint
                 long approxBytesToRead;
                 if (parserParams.Direction == ReadMessagesDirection.Forward)
                 {
-                    approxBytesToRead = new TextStreamPosition(parserParams.Range.Value.End, textStreamPositioningParams).StreamPositionAlignedToBlockSize
+                    approxBytesToRead = new TextStreamPosition(parserParams.Range!.Value.End, textStreamPositioningParams).StreamPositionAlignedToBlockSize
                         - new TextStreamPosition(parserParams.StartPosition, textStreamPositioningParams).StreamPositionAlignedToBlockSize;
                 }
                 else
                 {
                     approxBytesToRead = new TextStreamPosition(parserParams.StartPosition, textStreamPositioningParams).StreamPositionAlignedToBlockSize
-                        - new TextStreamPosition(parserParams.Range.Value.Begin, textStreamPositioningParams).StreamPositionAlignedToBlockSize;
+                        - new TextStreamPosition(parserParams.Range!.Value.Begin, textStreamPositioningParams).StreamPositionAlignedToBlockSize;
                 }
                 if (approxBytesToRead < StreamReadingStrategies.MultiThreadedStrategy<int>.GetBytesToParsePerThread(textStreamPositioningParams) * 2)
                 {

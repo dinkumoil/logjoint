@@ -16,7 +16,7 @@ namespace LogJoint
         void Register(ILogProviderFactory fact);
         void Unregister(ILogProviderFactory fact);
         IEnumerable<ILogProviderFactory> Items { get; }
-        ILogProviderFactory Find(string companyName, string formatName);
+        ILogProviderFactory? Find(string companyName, string formatName);
     };
 
     /// <summary>
@@ -33,7 +33,7 @@ namespace LogJoint
     {
         string Location { get; }
         DateTime LastModified { get; }
-        XElement LoadFormatDescription();
+        XElement? LoadFormatDescription();
     };
 
     public interface IUserDefinedFactory : ILogProviderFactory, IDisposable

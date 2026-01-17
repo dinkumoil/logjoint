@@ -36,7 +36,7 @@ namespace LogJoint
             throw new FormatException(string.Format("Cannot parse '{0}' as datetime with format '{1}'", value, format));
         }
 
-        DateTimeFormatInfo lastSuccessfulDateTimeFormat;
+        DateTimeFormatInfo? lastSuccessfulDateTimeFormat;
     };
 
     public class TimeZonesParsing
@@ -244,7 +244,7 @@ namespace LogJoint
             string GetRegexFromStringLiteral(string str);
         };
 
-        public static ParsedDateTimeFormat ParseDateTimeFormat(string formatString, CultureInfo culture, IRegexBuilderHook hook = null)
+        public static ParsedDateTimeFormat ParseDateTimeFormat(string formatString, CultureInfo culture, IRegexBuilderHook? hook = null)
         {
             if (formatString == null)
                 throw new ArgumentNullException("formatString");
@@ -258,20 +258,20 @@ namespace LogJoint
             return ParseCustomDateTimeFormat(formatString, culture, hook);
         }
 
-        private static string GetRegexFromStringLiteral(string str, IRegexBuilderHook hook)
+        private static string GetRegexFromStringLiteral(string str, IRegexBuilderHook? hook)
         {
             if (hook != null)
                 return hook.GetRegexFromStringLiteral(str);
             return Regex.Escape(str);
         }
 
-        private static StringBuilder AppendMatcherForOneOf(StringBuilder regexBuilder, IEnumerable<string> options, IRegexBuilderHook hook)
+        private static StringBuilder AppendMatcherForOneOf(StringBuilder regexBuilder, IEnumerable<string> options, IRegexBuilderHook? hook)
         {
 
             return regexBuilder.AppendFormat(@"  ({0})", options.Select(n => "(" + GetRegexFromStringLiteral(n, hook) + ")").Aggregate((ret, n) => ret + "|" + n));
         }
 
-        public static ParsedDateTimeFormat ParseCustomDateTimeFormat(string formatString, CultureInfo culture, IRegexBuilderHook hook = null)
+        public static ParsedDateTimeFormat ParseCustomDateTimeFormat(string formatString, CultureInfo culture, IRegexBuilderHook? hook = null)
         {
             if (formatString == null)
                 throw new ArgumentNullException("formatString");
@@ -463,7 +463,7 @@ namespace LogJoint
             return new ParsedDateTimeFormat() { Regex = re.ToString(), Flags = flags };
         }
 
-        public static bool TryParseStandardDateTimeFormat(string formatString, CultureInfo culture, out ParsedDateTimeFormat fmt, IRegexBuilderHook hook = null)
+        public static bool TryParseStandardDateTimeFormat(string formatString, CultureInfo culture, out ParsedDateTimeFormat fmt, IRegexBuilderHook? hook = null)
         {
             if (culture == null)
                 throw new ArgumentNullException("culture");
@@ -483,7 +483,7 @@ namespace LogJoint
             }
         }
 
-        static ParsedDateTimeFormat? ParseStandardDateTimeFormat(string formatString, CultureInfo culture, IRegexBuilderHook hook)
+        static ParsedDateTimeFormat? ParseStandardDateTimeFormat(string formatString, CultureInfo culture, IRegexBuilderHook? hook)
         {
             var ret = ParseStandardDateTimeFormatHelper(formatString, culture, hook);
             if (ret == null)
@@ -493,7 +493,7 @@ namespace LogJoint
             return val;
         }
 
-        static ParsedDateTimeFormat? ParseStandardDateTimeFormatHelper(string formatString, CultureInfo culture, IRegexBuilderHook hook)
+        static ParsedDateTimeFormat? ParseStandardDateTimeFormatHelper(string formatString, CultureInfo culture, IRegexBuilderHook? hook)
         {
             if (formatString.Length != 1)
                 return null;

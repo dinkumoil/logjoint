@@ -20,7 +20,7 @@ namespace LogJoint
 
         void ICombinedSearchResultInternal.Init(ISourceSearchResultInternal[] results, CancellationToken cancellation)
         {
-            IMessage lastMessage = null;
+            IMessage? lastMessage = null;
             foreach (var m in (new MessagesContainers.SimpleMergingCollection(
                 results.Select(r => r.CreateMessagesSnapshot()))).Forward(0, int.MaxValue))
             {
@@ -29,8 +29,11 @@ namespace LogJoint
                 var msg = m.Message.Message;
                 if (lastMessage != null && MessagesComparer.Compare(lastMessage, msg) == 0)
                     continue;
-                if (!logSourcesResults.TryGetValue(msg.GetLogSource(), out ICombinedSourceSearchResultInternal rslt))
-                    logSourcesResults.Add(msg.GetLogSource(), rslt = objectsFactory.CreateCombinedSourceSearchResult(msg.GetLogSource()));
+                ILogSource? logSource = msg.GetLogSource();
+                if (logSource == null)
+                    continue;
+                if (!logSourcesResults.TryGetValue(logSource, out ICombinedSourceSearchResultInternal? rslt))
+                    logSourcesResults.Add(logSource, rslt = objectsFactory.CreateCombinedSourceSearchResult(logSource));
                 if (!rslt.Add(msg))
                     continue;
                 lastMessage = msg;

@@ -319,7 +319,7 @@ namespace LogJoint
             enabled = e.SafeIntValue("enabled", 1) != 0;
             action = (FilterAction)e.SafeIntValue("action", (int)FilterAction.Include);
             initialName = e.AttributeValue("initial-name", defaultValue: "");
-            userDefinedName = e.AttributeValue("given-name", defaultValue: null);
+            userDefinedName = e.Attribute("given-name")?.Value;
 
             DateTime? parseRangeTime(string str)
                 => string.IsNullOrEmpty(str) ? null : MessageTimestamp.ParseFromLoselessFormat(str).ToUnspecifiedTime();

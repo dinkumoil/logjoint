@@ -80,7 +80,7 @@ namespace LogJoint
                 get { return File.GetLastWriteTime(fileName); }
             }
 
-            public XElement LoadFormatDescription()
+            public XElement? LoadFormatDescription()
             {
                 using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
                     return XDocument.Load(fs).Element("format");

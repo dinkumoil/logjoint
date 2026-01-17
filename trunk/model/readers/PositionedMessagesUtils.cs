@@ -59,7 +59,7 @@ namespace LogJoint
                 ReadMessagesFlag.HintMessageContentIsNotNeeed | ReadMessagesFlag.HintMessageContentIsNotNeeed,
                 ReadMessagesDirection.Backward)))
             {
-                return msg.Message.Position;
+                return msg.Message?.Position;
             }
             return null;
         }

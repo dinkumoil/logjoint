@@ -12,7 +12,7 @@ namespace LogJoint
                 return factory.CompanyName + "\\" + factory.FormatName;
             if (!string.IsNullOrEmpty(factory.FormatName))
                 return factory.FormatName;
-            return factory.ToString();
+            return factory.ToString() ?? "";
         }
 
 
@@ -33,7 +33,7 @@ namespace LogJoint
             get { return items; }
         }
 
-        ILogProviderFactory ILogProviderFactoryRegistry.Find(string companyName, string formatName)
+        ILogProviderFactory? ILogProviderFactoryRegistry.Find(string companyName, string formatName)
         {
             foreach (ILogProviderFactory fact in items)
             {

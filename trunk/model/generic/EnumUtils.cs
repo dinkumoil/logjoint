@@ -319,7 +319,7 @@ namespace LogJoint
         };
     }
 
-    public struct NullableDictionaryKey<T> where T : class
+    public struct NullableDictionaryKey<T> where T : class?
     {
         public readonly T Value;
 

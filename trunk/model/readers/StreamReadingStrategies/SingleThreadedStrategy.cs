@@ -19,7 +19,7 @@ namespace LogJoint.StreamReadingStrategies
         public override async Task ParserCreated(ReadMessagesParams p)
         {
             postprocessor = p.PostprocessorsFactory?.Invoke();
-            await textSplitter.BeginSplittingSession(p.Range.Value, p.StartPosition, p.Direction);
+            await textSplitter.BeginSplittingSession(p.Range!.Value, p.StartPosition, p.Direction);
 
             // todo
             //if (textSplitter.CurrentMessageIsEmpty)
@@ -56,10 +56,10 @@ namespace LogJoint.StreamReadingStrategies
             );
         }
 
-        protected abstract IMessage MakeMessage(TextMessageCapture capture);
+        protected abstract IMessage? MakeMessage(TextMessageCapture capture);
 
         readonly IMessagesSplitter textSplitter;
         readonly TextMessageCapture capture = new TextMessageCapture();
-        IMessagesPostprocessor postprocessor;
+        IMessagesPostprocessor? postprocessor;
     }
 }

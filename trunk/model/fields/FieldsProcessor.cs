@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Linq;
 using System.Xml.Linq;
 using System.Threading.Tasks;
+using System.Net.Http.Headers;
 
 namespace LogJoint.FieldsProcessor
 {
@@ -11,14 +12,16 @@ namespace LogJoint.FieldsProcessor
     {
         public class InitializationParams : IInitializationParams
         {
-            public InitializationParams(XElement fieldsNode, bool performChecks)
+            public InitializationParams(XElement? fieldsNode, bool performChecks)
             {
                 if (fieldsNode == null)
                     throw new ArgumentNullException(nameof(fieldsNode));
                 foreach (XElement f in fieldsNode.Elements("field"))
                 {
                     OutputFieldStruct s;
-                    s.Name = string.Intern(f.Attribute("name").Value);
+                    string? name = (f.Attribute("name")?.Value)
+                        ?? throw new ArgumentException("Field config lacks mandatory 'name'");
+                    s.Name = string.Intern(name);
                     var codeTypeAttr = f.Attribute("code-type");
                     switch (codeTypeAttr != null ? codeTypeAttr.Value : "")
                     {
@@ -47,11 +50,11 @@ namespace LogJoint.FieldsProcessor
             }
 
             internal IEnumerable<OutputFieldStruct> OutputFields => outputFields;
-            internal byte[] PrecompiledAssmebly => precompiledAssmebly;
+            internal byte[]? PrecompiledAssmebly => precompiledAssmebly;
 
             readonly List<OutputFieldStruct> outputFields = new List<OutputFieldStruct>();
             readonly OutputFieldStruct timeField;
-            readonly byte[] precompiledAssmebly;
+            readonly byte[]? precompiledAssmebly;
         };
 
         public class Factory : IFactory
@@ -75,7 +78,7 @@ namespace LogJoint.FieldsProcessor
             }
 
             IInitializationParams IFactory.CreateInitializationParams(
-                XElement fieldsNode, bool performChecks
+                XElement? fieldsNode, bool performChecks
             ) => new InitializationParams(fieldsNode, performChecks);
 
             async ValueTask<IFieldsProcessor> IFactory.CreateProcessor(
@@ -108,6 +111,9 @@ namespace LogJoint.FieldsProcessor
                 LJTraceSource trace
             )
             {
+                if (userCodeAssemblyProvider == null)
+                    throw new InvalidOperationException(
+                        "UserCodeAssemblyProvider is required to complete this operation");
                 var initParams = (InitializationParams)initializationParams;
                 return userCodeAssemblyProvider.GetUserCodeAsssembly(
                     trace, SanitizeInputFieldNames(inputFieldNames).ToList(),
@@ -135,6 +141,7 @@ namespace LogJoint.FieldsProcessor
             }
         };
 
+
         public FieldsProcessorImpl(
             IEnumerable<string> inputFieldNames,
             IEnumerable<OutputFieldStruct> outputFields,
@@ -143,7 +150,7 @@ namespace LogJoint.FieldsProcessor
             LJTraceSource trace,
             Telemetry.ITelemetryCollector telemetryCollector,
             IUserCodeAssemblyProvider? userCodeAssemblyProvider,
-            byte[] precompiledAssembly,
+            byte[]? precompiledAssembly,
             IAssemblyLoader assemblyLoader
         )
         {
@@ -156,6 +163,8 @@ namespace LogJoint.FieldsProcessor
             this.userCodeAssemblyProvider = userCodeAssemblyProvider;
             this.assemblyLoader = assemblyLoader;
             this.precompiledAssembly = precompiledAssembly;
+            // Mandatory Init() sets it.
+            this.builder = null!;
         }
 
         public async Task Init()
@@ -238,7 +247,7 @@ namespace LogJoint.FieldsProcessor
         async ValueTask<Internal.__MessageBuilder> CreateBuilderInstance()
         {
             int builderTypeHash = GetMessageBuilderTypeHash();
-            Task<Type> builderTypeTask;
+            Task<Type>? builderTypeTask;
             lock (builderTypesCache)
             {
                 if (!builderTypesCache.TryGetValue(builderTypeHash, out builderTypeTask))
@@ -250,9 +259,11 @@ namespace LogJoint.FieldsProcessor
 
             var builderType = await builderTypeTask;
 
-            Internal.__MessageBuilder ret = (Internal.__MessageBuilder)Activator.CreateInstance(builderType);
+            Internal.__MessageBuilder? ret = (Internal.__MessageBuilder?)Activator.CreateInstance(builderType);
+            if (ret == null)
+                throw new InvalidOperationException("Can not create builder of type " + builderType.Name);
 
-            Assembly dependencyResolveHandler(object s, ResolveEventArgs e)
+            Assembly? dependencyResolveHandler(object? s, ResolveEventArgs e)
             {
                 var name = (new AssemblyName(e.Name)).Name;
                 var asm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == name);
@@ -276,9 +287,14 @@ namespace LogJoint.FieldsProcessor
 
         async Task<Type> GenerateType(int builderTypeHash)
         {
+            static Type loadBuilder(Assembly asm)
+            {
+                Type? t = asm.GetType("GeneratedMessageBuilder");
+                return t ?? throw new InvalidOperationException("Can not load builder type");
+            }
             if (precompiledAssembly != null && userCodeAssemblyProvider == null)
             {
-                return assemblyLoader.Load(precompiledAssembly).GetType("GeneratedMessageBuilder");
+                return loadBuilder(assemblyLoader.Load(precompiledAssembly));
             }
             await using var cacheSection = await cacheEntry.OpenRawStreamSection($"builder-code-{builderTypeHash}",
                 Persistence.StorageSectionOpenFlag.ReadWrite);
@@ -291,7 +307,7 @@ namespace LogJoint.FieldsProcessor
                 {
                     var cachedRawAsm = new byte[cachedRawAsmSize];
                     await cacheSection.Data.ReadExactlyAsync(cachedRawAsm, 0, (int)cachedRawAsmSize);
-                    return assemblyLoader.Load(cachedRawAsm).GetType("GeneratedMessageBuilder");
+                    return loadBuilder(assemblyLoader.Load(cachedRawAsm));
                 }
                 catch (Exception e)
                 {
@@ -308,7 +324,7 @@ namespace LogJoint.FieldsProcessor
             Assembly asm = Assembly.Load(rawAsm);
             cacheSection.Data.Position = 0;
             await cacheSection.Data.WriteAsync(rawAsm, 0, rawAsm.Length);
-            return asm.GetType("GeneratedMessageBuilder");
+            return loadBuilder(asm);
         }
 
 
@@ -322,7 +338,7 @@ namespace LogJoint.FieldsProcessor
         readonly LJTraceSource trace;
         readonly IUserCodeAssemblyProvider? userCodeAssemblyProvider;
         readonly IAssemblyLoader assemblyLoader;
-        readonly byte[] precompiledAssembly;
+        readonly byte[]? precompiledAssembly;
 
         #endregion
     };

@@ -46,7 +46,7 @@ namespace LogJoint.FieldsProcessor
             List<string> inputFieldNames,
             List<ExtensionInfo> extensions,
             List<OutputFieldStruct> outputFields,
-            string assemblyName);
+            string? assemblyName);
     };
 
     public interface IAssemblyLoader
@@ -103,7 +103,7 @@ namespace LogJoint.FieldsProcessor
     public interface IFactory
     {
         IInitializationParams CreateInitializationParams(
-            XElement fieldsNode, bool performChecks
+            XElement? fieldsNode, bool performChecks
         );
         ValueTask<IFieldsProcessor> CreateProcessor(
             IInitializationParams initializationParams,

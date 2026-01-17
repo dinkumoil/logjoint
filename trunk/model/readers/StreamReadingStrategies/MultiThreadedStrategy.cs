@@ -13,13 +13,13 @@ namespace LogJoint.StreamReadingStrategies
     {
         public MultiThreadedStrategy(ILogMedia media, Encoding encoding, IRegex headerRe,
             MessagesSplitterFlags splitterFlags, TextStreamPositioningParams textStreamPositioningParams,
-            string parentLoggingPrefix, ITraceSourceFactory traceSourceFactory)
+            string? parentLoggingPrefix, ITraceSourceFactory traceSourceFactory)
             : this(media, encoding, headerRe, splitterFlags, false, textStreamPositioningParams, parentLoggingPrefix, traceSourceFactory)
         {
             BytesToParsePerThread = GetBytesToParsePerThread(textStreamPositioningParams);
         }
 
-        public abstract IMessage MakeMessage(TextMessageCapture capture, UserThreadLocalData threadLocal);
+        public abstract IMessage? MakeMessage(TextMessageCapture capture, UserThreadLocalData threadLocal);
         public abstract UserThreadLocalData InitializeThreadLocalState();
 
         public readonly int BytesToParsePerThread;
@@ -75,7 +75,7 @@ namespace LogJoint.StreamReadingStrategies
         #region Internal members that can be accessed from unit tests
 
         internal MultiThreadedStrategy(ILogMedia media, Encoding encoding, IRegex headerRe, MessagesSplitterFlags splitterFlags,
-            bool useMockThreading, TextStreamPositioningParams textStreamPositioningParams, string parentLoggingPrefix, ITraceSourceFactory traceSourceFactory)
+            bool useMockThreading, TextStreamPositioningParams textStreamPositioningParams, string? parentLoggingPrefix, ITraceSourceFactory traceSourceFactory)
             : base(media, encoding, headerRe, textStreamPositioningParams)
         {
             if (parentLoggingPrefix != null)
@@ -98,7 +98,7 @@ namespace LogJoint.StreamReadingStrategies
             this.splitterFlags = splitterFlags;
         }
 
-        internal ISequentialMediaReaderAndProcessorMock MockedReaderAndProcessor
+        internal ISequentialMediaReaderAndProcessorMock? MockedReaderAndProcessor
         {
             get { return mockedReaderAndProcessor; }
         }
@@ -142,7 +142,7 @@ namespace LogJoint.StreamReadingStrategies
             public long startTextPosition;
             public long stopTextPosition;
 
-            public List<PostprocessedMessage> outputBuffer;
+            public List<PostprocessedMessage>? outputBuffer;
 
             public Profiling.Operation perfop;
 
@@ -197,7 +197,7 @@ namespace LogJoint.StreamReadingStrategies
             {
                 Stream stream = owner.media.DataStream;
                 ReadMessagesParams parserParams = owner.currentParams;
-                FileRange.Range range = parserParams.Range.Value;
+                FileRange.Range range = parserParams.Range!.Value;
                 TextStreamPosition startPosition = new TextStreamPosition(parserParams.StartPosition, owner.textStreamPositioningParams);
 
                 long beginStreamPos = new TextStreamPosition(range.Begin, owner.textStreamPositioningParams).StreamPositionAlignedToBlockSize;
@@ -251,7 +251,7 @@ namespace LogJoint.StreamReadingStrategies
             {
                 Stream stream = owner.media.DataStream;
                 ReadMessagesParams parserParams = owner.currentParams;
-                FileRange.Range range = parserParams.Range.Value;
+                FileRange.Range range = parserParams.Range!.Value;
                 TextStreamPosition startPosition = new TextStreamPosition(parserParams.StartPosition, owner.textStreamPositioningParams);
 
                 long beginStreamPos = startPosition.StreamPositionAlignedToBlockSize;
@@ -408,7 +408,7 @@ namespace LogJoint.StreamReadingStrategies
                     if (x == null)
                         break;
                     var postprocessorResult = postprocessor?.Postprocess(x);
-                    pieceOfWork.outputBuffer.Add(new PostprocessedMessage(x, postprocessorResult));
+                    pieceOfWork.outputBuffer!.Add(new PostprocessedMessage(x, postprocessorResult));
                 }
                 tls.splitter.EndSplittingSession();
 
@@ -446,7 +446,7 @@ namespace LogJoint.StreamReadingStrategies
                     if (currentPieceOfWork == null)
                         break;
                     currentPieceOfWork.perfop.Milestone("Starting consuming");
-                    tracer.Info("Messages in output buffer: {0}", currentPieceOfWork.outputBuffer.Count);
+                    tracer.Info("Messages in output buffer: {0}", currentPieceOfWork.outputBuffer!.Count);
 
 
                     // Here is tricky: returning bytes buffer of the piece of work that was handled previously.
@@ -512,8 +512,8 @@ namespace LogJoint.StreamReadingStrategies
         readonly MessagesSplitterFlags splitterFlags;
         readonly bool useMockThreading;
 
-        ISequentialMediaReaderAndProcessorMock mockedReaderAndProcessor;
-        IEnumerator<PostprocessedMessage> enumer;
+        ISequentialMediaReaderAndProcessorMock? mockedReaderAndProcessor;
+        IEnumerator<PostprocessedMessage>? enumer;
         ReadMessagesParams currentParams;
         int nextPieceOfWorkId;
         int lastThreadLocalStateId;

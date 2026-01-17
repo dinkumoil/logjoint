@@ -16,14 +16,14 @@ namespace LogJoint
     {
         internal MediaBasedMessagesReader(
             ILogMedia media,
-            BoundFinder beginFinder,
-            BoundFinder endFinder,
-            MessagesReaderExtensions.XmlInitializationParams extensionsInitData,
+            BoundFinder? beginFinder,
+            BoundFinder? endFinder,
+            MessagesReaderExtensions.XmlInitializationParams? extensionsInitData,
             TextStreamPositioningParams textStreamPositioningParams,
             bool isQuickFormatDetectionMode,
             Settings.IGlobalSettingsAccessor settingsAccessor,
             ITraceSourceFactory traceSourceFactory,
-            string parentLoggingPrefix
+            string? parentLoggingPrefix
         )
         {
             this.beginFinder = beginFinder;
@@ -330,8 +330,8 @@ namespace LogJoint
         }
 
         readonly ILogMedia media;
-        readonly BoundFinder beginFinder;
-        readonly BoundFinder endFinder;
+        readonly BoundFinder? beginFinder;
+        readonly BoundFinder? endFinder;
         readonly MessagesReaderExtensions extensions;
         readonly Lazy<StreamReadingStrategies.BaseStrategy> singleThreadedStrategy;
         readonly Lazy<StreamReadingStrategies.BaseStrategy> multiThreadedStrategy;
@@ -353,11 +353,11 @@ namespace LogJoint
     internal class MessagesBuilderCallback : FieldsProcessor.IMessagesBuilderCallback
     {
         readonly ILogSourceThreadsInternal threads;
-        readonly IThread fakeThread;
+        readonly IThread? fakeThread;
         long currentBeginPosition, currentEndPosition;
         StringSlice rawText;
 
-        public MessagesBuilderCallback(ILogSourceThreadsInternal threads, IThread fakeThread)
+        public MessagesBuilderCallback(ILogSourceThreadsInternal threads, IThread? fakeThread)
         {
             this.threads = threads;
             this.fakeThread = fakeThread;

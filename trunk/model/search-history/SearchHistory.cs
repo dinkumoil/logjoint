@@ -21,7 +21,7 @@ namespace LogJoint
             tasks.AddTask(LoadSearchHistory);
         }
 
-        public event EventHandler OnChanged;
+        public event EventHandler? OnChanged;
 
         int ISearchHistory.MaxCount
         {
@@ -88,9 +88,9 @@ namespace LogJoint
             items.AddRange(
                 from entryNode in section.Data.Elements(rootNodeName).Elements(entryNodeName)
                 let entry =
-                    (ISearchHistoryEntry)UserDefinedSearchHistoryEntry.TryLoad(entryNode, userDefinedSearches) ??
+                    (ISearchHistoryEntry?)UserDefinedSearchHistoryEntry.TryLoad(entryNode, userDefinedSearches) ??
                     new SearchHistoryEntry(entryNode)
-                where entry.IsValid
+                where entry != null
                 select entry
             );
             ApplySizeLimit();

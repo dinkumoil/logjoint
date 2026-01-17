@@ -31,8 +31,8 @@ namespace LogJoint.RegularGrammar
         public readonly static string EmptyBodyReEquivalientTemplate = "^(?<body>.*)$";
         public readonly FormatFlags Flags;
         public readonly RotationParams RotationParams;
-        public readonly BoundFinder BeginFinder;
-        public readonly BoundFinder EndFinder;
+        public readonly BoundFinder? BeginFinder;
+        public readonly BoundFinder? EndFinder;
 
         public FormatInfo(
             LoadedRegex headRe, LoadedRegex bodyRe,
@@ -42,8 +42,8 @@ namespace LogJoint.RegularGrammar
             TextStreamPositioningParams textStreamPositioningParams,
             FormatFlags flags,
             RotationParams rotationParams,
-            BoundFinder beginFinder,
-            BoundFinder endFinder
+            BoundFinder? beginFinder,
+            BoundFinder? endFinder
         ) :
             base(extensionsInitData)
         {
@@ -115,15 +115,15 @@ namespace LogJoint.RegularGrammar
 
         MessagesBuilderCallback CreateMessageBuilderCallback()
         {
-            IThread fakeThread = null;
+            IThread? fakeThread = null;
             //fakeThread = threads.GetThread("");
             return new MessagesBuilderCallback(threads, fakeThread);
         }
 
-        static IMessage MakeMessageInternal(
+        static IMessage? MakeMessageInternal(
             TextMessageCapture capture,
             IRegex bodyRe,
-            ref IMatch bodyMatch,
+            ref IMatch? bodyMatch,
             FieldsProcessor.IFieldsProcessor fieldsProcessor,
             FieldsProcessor.MakeMessageFlags makeMessageFlags,
             DateTime sourceTime,
@@ -150,7 +150,7 @@ namespace LogJoint.RegularGrammar
                 fieldsProcessor.SetInputField(idx++, new StringSlice(capture.HeaderBuffer, g.Index, g.Length));
             }
 
-            if (bodyRe != null)
+            if (bodyRe != null && bodyMatch != null)
             {
                 groups = bodyMatch.Groups;
                 for (int i = 1; i < groups.Length; ++i)
@@ -179,7 +179,7 @@ namespace LogJoint.RegularGrammar
             readonly IRegex bodyRegex;
             readonly Profiling.Counters.Writer perfWriter;
             FieldsProcessor.IFieldsProcessor fieldsProcessor;
-            IMatch bodyMatch;
+            IMatch? bodyMatch;
 
             FieldsProcessor.MakeMessageFlags currentParserFlags;
 
@@ -195,6 +195,8 @@ namespace LogJoint.RegularGrammar
                 this.callback = reader.CreateMessageBuilderCallback();
                 this.bodyRegex = reader.fmtInfo.BodyRe.Regex;
                 this.perfWriter = reader.PerfCounters.GetWriter();
+                // Mandatory ParserCreated inits it.
+                this.fieldsProcessor = null!;
             }
             public override async Task ParserCreated(ReadMessagesParams p)
             {
@@ -202,7 +204,7 @@ namespace LogJoint.RegularGrammar
                 await base.ParserCreated(p);
                 currentParserFlags = ParserFlagsToMakeMessageFlags(p.Flags);
             }
-            protected override IMessage MakeMessage(TextMessageCapture capture)
+            protected override IMessage? MakeMessage(TextMessageCapture capture)
             {
                 using var perfop = perfWriter.IncrementTicks(reader.ReadMessageCounter);
                 var result = MakeMessageInternal(capture, bodyRegex, ref bodyMatch, fieldsProcessor, currentParserFlags,
@@ -222,9 +224,9 @@ namespace LogJoint.RegularGrammar
         {
             public LoadedRegex headRe;
             public LoadedRegex bodyRe;
-            public IMatch bodyMatch;
-            public FieldsProcessor.IFieldsProcessor fieldsProcessor;
-            public MessagesBuilderCallback callback;
+            public IMatch? bodyMatch;
+            required public FieldsProcessor.IFieldsProcessor fieldsProcessor;
+            required public MessagesBuilderCallback callback;
         }
 
         class MultiThreadedStrategyImpl : StreamReadingStrategies.MultiThreadedStrategy<ProcessingThreadLocalData>
@@ -244,7 +246,7 @@ namespace LogJoint.RegularGrammar
                 await base.ParserCreated(p);
                 flags = ParserFlagsToMakeMessageFlags(p.Flags);
             }
-            public override IMessage MakeMessage(TextMessageCapture capture, ProcessingThreadLocalData threadLocal)
+            public override IMessage? MakeMessage(TextMessageCapture capture, ProcessingThreadLocalData threadLocal)
             {
                 return MakeMessageInternal(capture, threadLocal.bodyRe.Regex, ref threadLocal.bodyMatch, threadLocal.fieldsProcessor, flags, media.LastModified,
                     reader.TimeOffsets, threadLocal.callback);
@@ -279,7 +281,7 @@ namespace LogJoint.RegularGrammar
 
         protected override Encoding DetectStreamEncoding(Stream stream)
         {
-            Encoding ret = EncodingUtils.GetEncodingFromConfigXMLName(fmtInfo.Encoding, Trace);
+            Encoding? ret = EncodingUtils.GetEncodingFromConfigXMLName(fmtInfo.Encoding, Trace);
             if (ret == null)
                 ret = EncodingUtils.DetectEncodingFromBOM(stream, EncodingUtils.GetDefaultEncoding());
             return ret;
@@ -357,7 +359,7 @@ namespace LogJoint.RegularGrammar
             FieldsProcessor.IFactory fieldsProcessorFactory, ProviderFactory providerFactory, ReaderFactory readerFactory)
             : base(createParams, regexFactory)
         {
-            var formatSpecificNode = createParams.FormatSpecificNode;
+            XElement formatSpecificNode = createParams.FormatSpecificNode;
             ReadPatterns(formatSpecificNode, patterns);
             var boundsNodes = formatSpecificNode.Elements("bounds").Take(1);
             var beginFinder = BoundFinder.CreateBoundFinder(boundsNodes.Select(n => n.Element("begin")).FirstOrDefault());
@@ -452,16 +454,17 @@ namespace LogJoint.RegularGrammar
 
         byte[] IPrecompilingLogProviderFactory.Precompile(string assemblyName, LJTraceSource trace)
         {
+            FormatInfo fmt = fmtInfo.Value;
             return fieldsProcessorFactory.CreatePrecompiledAssembly(
-                fmtInfo.Value.FieldsProcessorParams,
-                fmtInfo.Value.InputFieldNames,
-                fmtInfo.Value.ExtensionsInitData.Items.Select(
+                fmt.FieldsProcessorParams,
+                fmt.InputFieldNames,
+                fmt.ExtensionsInitData != null ? fmt.ExtensionsInitData.Items.Select(
                     i => new FieldsProcessor.ExtensionInfo(
                         i.name, i.assemblyName, i.className,
                         () => throw new InvalidOperationException(
                             $"Attempted to instantiate format extension {i.name} while precompiling")
                     )
-                ),
+                ) : [],
                 assemblyName,
                 trace
             );

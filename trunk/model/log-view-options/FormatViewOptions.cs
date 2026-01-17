@@ -20,7 +20,7 @@ namespace LogJoint
             this.rawViewAllowed = rawViewAllowed;
             this.wrapLineLength = wrapLineLength;
         }
-        public FormatViewOptions(XElement configNode) : this()
+        public FormatViewOptions(XElement? configNode) : this()
         {
             if (configNode == null)
                 return;

@@ -36,6 +36,7 @@ namespace LogJoint
             this.charBuffer = new char[binaryBufferSize];
             this.textBuffer = new char[textBufferCapacity];
             this.iterator = new TextAccessIterator(this);
+            this.textBufferAsString = "";
         }
 
         public StreamTextAccess(Stream stream, Encoding streamEncoding) :
@@ -526,13 +527,13 @@ namespace LogJoint
         readonly byte[] binaryBuffer; // raw bytes are read here
         readonly char[] charBuffer; // decoder converts raw bytes to chars and stores here
         readonly char[] textBuffer; /* stores current text buffer.
-		                               textBuffer contain characters from the current (latest read) block 
-		                               preceeded (or followed in reverse mode) by characters 
-		                               that are left from previously read block. */
+                                       textBuffer contain characters from the current (latest read) block 
+                                       preceeded (or followed in reverse mode) by characters 
+                                       that are left from previously read block. */
         int textBufferLength;
         string textBufferAsString; /* caches string (or a substring) returned by textBuffer.ToString().
-		                                   note each time StringBuilder.ToString() is called it generates 
-		                                   a new string (checked in .net 2) which is unefficient. */
+                                           note each time StringBuilder.ToString() is called it generates 
+                                           a new string (checked in .net 2) which is unefficient. */
         TextAccessDirection direction; // direction to advance the buffer
         TextStreamPosition startPosition; // TextStreamPosition that reading started from
         bool readingStarted; // buffer was loaded at least once
@@ -540,7 +541,7 @@ namespace LogJoint
         bool decoderNeedsReloading; // when reading next block - decoder needs to be reset and reloaded
         long streamPositionAlignedToBufferSize; // stream position where current stream block has been read from
         int charactersLeftFromPrevBlock; /* first (forward mode) or last (backward mode) charactersLeftFromPrevBlock characters in textBuffer 
-		                                    are from previous block */
+                                            are from previous block */
         int totalCharactersInPrevBlock; // how many сharacters were in the previous block
         int charsCutFromBeginningOfTextBuffer; // how many сharacters at the beginning of textBuffer are not included to textBufferAsString because of startPosition limitation
         int charsCutFromEndOfTextBuffer; // how many сharacters at the end of textBuffer are not included to textBufferAsString because of startPosition limitation

@@ -144,7 +144,7 @@ namespace LogJoint
             get
             {
                 var ret = DateRange.MakeEmpty();
-                foreach (var r in EnumVisibleResults().Select(r => r.GetLastSnapshot()).Where(s => s != null))
+                foreach (var r in EnumVisibleResults().Select(r => r.GetLastSnapshot()).OfType<MessagesContainers.ListBasedCollection>())
                     ret = DateRange.Union(ret, r.DatesRange);
                 return ret;
             }
@@ -206,7 +206,7 @@ namespace LogJoint
 
             bool findSmallestDate = bound == ValueBound.Lower || bound == ValueBound.Upper;
 
-            foreach (var r in EnumVisibleResults().Select(r => r.GetLastSnapshot()).Where(s => s != null))
+            foreach (var r in EnumVisibleResults().Select(r => r.GetLastSnapshot()).OfType<MessagesContainers.ListBasedCollection>())
             {
                 var bnd = r.GetDateBoundPosition(d, bound);
 

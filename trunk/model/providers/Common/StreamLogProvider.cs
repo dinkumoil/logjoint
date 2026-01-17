@@ -7,9 +7,9 @@ namespace LogJoint
 {
     public class StreamBasedFormatInfo
     {
-        public readonly MessagesReaderExtensions.XmlInitializationParams ExtensionsInitData;
+        public readonly MessagesReaderExtensions.XmlInitializationParams? ExtensionsInitData;
 
-        public StreamBasedFormatInfo(MessagesReaderExtensions.XmlInitializationParams extensionsInitData)
+        public StreamBasedFormatInfo(MessagesReaderExtensions.XmlInitializationParams? extensionsInitData)
         {
             this.ExtensionsInitData = extensionsInitData;
         }

@@ -12,9 +12,9 @@ namespace LogJoint
         readonly MessagesContainers.ListBasedCollection messages;
         readonly object messagesLock = new object();
         readonly Task<SearchResultStatus> workerTask;
-        Progress.IProgressEventsSink progressSink;
+        Progress.IProgressEventsSink? progressSink;
         int hitsCount;
-        MessagesContainers.ListBasedCollection lastMessagesSnapshot;
+        MessagesContainers.ListBasedCollection? lastMessagesSnapshot;
 
         public SourceSearchResult(
             ILogSourceSearchWorkerInternal worker,
@@ -96,7 +96,7 @@ namespace LogJoint
             }
         }
 
-        MessagesContainers.ListBasedCollection ISourceSearchResultInternal.GetLastSnapshot()
+        MessagesContainers.ListBasedCollection? ISourceSearchResultInternal.GetLastSnapshot()
         {
             return lastMessagesSnapshot;
         }

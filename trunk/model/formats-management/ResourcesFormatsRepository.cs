@@ -44,9 +44,10 @@ namespace LogJoint
                 get { return new DateTime(); }
             }
 
-            public XElement LoadFormatDescription()
+            public XElement? LoadFormatDescription()
             {
-                return XDocument.Load(resourcesAssembly.GetManifestResourceStream(resourceName)).Element("format");
+                var stream = resourcesAssembly.GetManifestResourceStream(resourceName);
+                return stream != null ? XDocument.Load(stream).Element("format") : null;
             }
 
             readonly string resourceName;

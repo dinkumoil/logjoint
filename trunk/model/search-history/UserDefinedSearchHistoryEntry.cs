@@ -13,16 +13,18 @@ namespace LogJoint
             this.uds = uds;
         }
 
-        public static UserDefinedSearchHistoryEntry TryLoad(XElement e, IUserDefinedSearches udss)
+        public static UserDefinedSearchHistoryEntry? TryLoad(XElement e, IUserDefinedSearches udss)
         {
             if (e.AttributeValue("type") != "uds")
                 return null;
             var name = e.AttributeValue("name");
             var uds = udss.Items.FirstOrDefault(i => i.Name == name);
+            if (uds == null)
+                return null;
             return new UserDefinedSearchHistoryEntry(uds);
         }
 
-        bool ISearchHistoryEntry.IsValid { get { return uds != null; } }
+        bool ISearchHistoryEntry.IsValid { get { return true; } }
 
         void ISearchHistoryEntry.Save(XElement e)
         {
@@ -32,7 +34,7 @@ namespace LogJoint
 
         IUserDefinedSearch IUserDefinedSearchHistoryEntry.UDS => uds;
 
-        bool IEquatable<ISearchHistoryEntry>.Equals(ISearchHistoryEntry other)
+        bool IEquatable<ISearchHistoryEntry>.Equals(ISearchHistoryEntry? other)
         {
             var e = other as UserDefinedSearchHistoryEntry;
             if (e == null)
@@ -40,9 +42,9 @@ namespace LogJoint
             return ReferenceEquals(e.uds, uds);
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
-            return uds?.Name;
+            return uds.Name;
         }
     };
 }

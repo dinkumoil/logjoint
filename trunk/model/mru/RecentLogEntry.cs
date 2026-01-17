@@ -67,7 +67,7 @@ namespace LogJoint.MRU
             return FactoryPartToString(Factory);
         }
 
-        public static ILogProviderFactory ParseFactoryPart(ILogProviderFactoryRegistry registry, string recentLogEntryString)
+        public static ILogProviderFactory? ParseFactoryPart(ILogProviderFactoryRegistry registry, string recentLogEntryString)
         {
             var m = MatchRecentLogEntryString(recentLogEntryString);
             string company = m.Groups["company"].Value;

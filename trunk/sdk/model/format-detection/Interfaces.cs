@@ -20,7 +20,7 @@ namespace LogJoint
 
     public interface IFormatAutodetect
     {
-        Task<DetectedFormat> DetectFormat(string fileName, string loggableName, CancellationToken cancellation, IFormatAutodetectionProgress progress);
+        Task<DetectedFormat?> DetectFormat(string fileName, string loggableName, CancellationToken cancellation, IFormatAutodetectionProgress progress);
         IFormatAutodetect Clone();
     };
 

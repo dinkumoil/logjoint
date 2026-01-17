@@ -28,7 +28,7 @@ namespace LogJoint
             this.fileSystem = fileSystem;
         }
 
-        Task<DetectedFormat> IFormatAutodetect.DetectFormat(string fileName, string loggableName, CancellationToken cancellation, IFormatAutodetectionProgress progress)
+        Task<DetectedFormat?> IFormatAutodetect.DetectFormat(string fileName, string loggableName, CancellationToken cancellation, IFormatAutodetectionProgress progress)
         {
             return DetectFormat(fileName, loggableName, mruIndexGetter, factoriesRegistry, cancellation, progress, traceSourceFactory, fileSystem);
         }
@@ -38,7 +38,7 @@ namespace LogJoint
             return new FormatAutodetect(mruIndexGetter, factoriesRegistry, traceSourceFactory, fileSystem);
         }
 
-        static async Task<DetectedFormat> DetectFormat(
+        static async Task<DetectedFormat?> DetectFormat(
             string fileName,
             string loggableName,
             Func<ILogProviderFactory, int> mruIndexGetter,
@@ -59,12 +59,12 @@ namespace LogJoint
             using (var localCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
             {
                 var candidateFactories = GetOrderedListOfRelevantFactories(fileName, mruIndexGetter, factoriesRegistry).ToArray();
-                var ret = (await Task.WhenAll(candidateFactories.Select((factory, index) => (factory, index)).Select(async candidate =>
+                DetectedFormat? ret = (await Task.WhenAll(candidateFactories.Select((factory, index) => (factory, index)).Select(async candidate =>
                 {
                     var (factory, idx) = candidate;
                     try
                     {
-                        using (var perfOp = new Profiling.Operation(log, factory.ToString()))
+                        using (var perfOp = new Profiling.Operation(log, factory.ToString() ?? ""))
                         using (var fileMedia = await createFileMedia())
                         using (var reader = ((IMediaBasedReaderFactory)factory).CreateMessagesReader(
                             new MediaBasedReaderParams(threads, fileMedia,
@@ -75,7 +75,7 @@ namespace LogJoint
                             if (localCancellation.IsCancellationRequested)
                             {
                                 perfOp.Milestone("cancelled");
-                                return (fmt: (DetectedFormat)null, idx);
+                                return (fmt: (DetectedFormat?)null, idx);
                             }
                             await reader.UpdateAvailableBounds(false);
                             perfOp.Milestone("bounds detected");
@@ -92,7 +92,7 @@ namespace LogJoint
                     {
                         log.Error(e, "Failed to load '{0}' as {1}", fileName, factory);
                     }
-                    return (fmt: (DetectedFormat)null, idx);
+                    return (fmt: (DetectedFormat?)null, idx);
                 }))).Where(x => x.fmt != null).OrderBy(x => x.idx).Select(x => x.fmt).FirstOrDefault();
                 if (ret != null)
                     return ret;

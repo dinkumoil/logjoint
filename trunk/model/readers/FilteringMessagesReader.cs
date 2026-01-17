@@ -19,11 +19,11 @@ namespace LogJoint
 
         private readonly IMessagesReader unfilteredReader;
         private readonly ISynchronizationContext modelSynchronizationContext;
-        private readonly IFiltersList modelFilters; // The filters shared with the model threading context.
+        private readonly IFiltersList? modelFilters; // The filters shared with the model threading context.
         private readonly FilteringStats filteringStats;
         private readonly LJTraceSource trace;
 
-        private IFiltersList effectiveFilters; // The filters currently used for filtering in this IMessagesReader's context.
+        private IFiltersList? effectiveFilters; // The filters currently used for filtering in this IMessagesReader's context.
         private string filteredLogFile;
         private SimpleFileMedia filteredLogMedia;
         private IMessagesReader filteredLogReader;
@@ -31,7 +31,7 @@ namespace LogJoint
         private bool timeOffsetChanged = false;
         private readonly Func<ValueTask> ensureFilteredLogIsCreated;
 
-        public FilteringMessagesReader(IMessagesReader unfilteredReader, MediaBasedReaderParams unfilteredReaderParams, IFiltersList filters,
+        public FilteringMessagesReader(IMessagesReader unfilteredReader, MediaBasedReaderParams unfilteredReaderParams, IFiltersList? filters,
             ITempFilesManager tempFilesManager, IFileSystem fileSystem, IRegexFactory regexFactory,
             ITraceSourceFactory traceSourceFactory, Settings.IGlobalSettingsAccessor globalSettings,
             ISynchronizationContext modelSynchronizationContext, FilteringStats filteringStats)

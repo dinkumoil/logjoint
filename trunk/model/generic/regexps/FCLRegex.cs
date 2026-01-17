@@ -165,6 +165,8 @@ namespace LogJoint.RegularExpressions
         {
             this.re = re;
             this.groups = new Group[re.GroupsCount];
+            // Mandatory Init sets it.
+            this.match = null!;
         }
 
         public IRegex OwnerRegex
@@ -194,7 +196,7 @@ namespace LogJoint.RegularExpressions
 
         public void CopyFrom(IMatch srcMatch)
         {
-            FCLMatch srcImpl = srcMatch as FCLMatch;
+            FCLMatch? srcImpl = srcMatch as FCLMatch;
             if (srcImpl == null)
                 throw new ArgumentException("srcMatch has invalid type", nameof(srcMatch));
             this.match = srcImpl.match;

@@ -18,7 +18,7 @@ namespace LogJoint
             if (a == null || !bool.TryParse(a.Value, out IsSupported))
                 IsSupported = true;
         }
-        static public RotationParams FromConfigNode(XElement configNode)
+        static public RotationParams FromConfigNode(XElement? configNode)
         {
             if (configNode == null)
                 return new RotationParams() { IsSupported = true };

@@ -69,6 +69,11 @@ namespace LogJoint
                 companyName = idData.company;
                 formatName = idData.formatName;
             }
+            else
+            {
+                companyName = "";
+                formatName = "";
+            }
 
             description = ReadParameter(createParams.RootNode, "description").Trim();
 
@@ -106,8 +111,8 @@ namespace LogJoint
             string pattern = n.Value;
             if (string.IsNullOrEmpty(pattern))
                 return ret;
-            Regex precompiledRegex = null;
-            XAttribute precompiledAttr = n.Attribute("precompiled");
+            Regex? precompiledRegex = null;
+            XAttribute? precompiledAttr = n.Attribute("precompiled");
             if (precompiledAttr != null)
             {
                 if (extensionsInitData == null)
@@ -124,18 +129,10 @@ namespace LogJoint
                 if (precompiledRegex == null)
                     throw new Exception($"'precompiled' attribute '{precompiledAttr.Value}' refers to a non-Regex property");
             }
-            XAttribute partialMatchAttr = n.Attribute("suffers-from-partial-match-problem");
+            XAttribute? partialMatchAttr = n.Attribute("suffers-from-partial-match-problem");
             ret = new LoadedRegex(regexFactory.Create(pattern, opts, precompiledRegex),
                 suffersFromPartialMatchProblem: partialMatchAttr != null && partialMatchAttr.Value == "yes");
             return ret;
-        }
-
-        protected static Type ReadType(XElement root, string name, Type defType)
-        {
-            string typeName = ReadParameter(root, name);
-            if (string.IsNullOrEmpty(typeName))
-                return defType;
-            return Type.GetType(typeName);
         }
 
         protected static void ReadPatterns(XElement formatSpecificNode, List<string> patternsList)
@@ -152,7 +149,7 @@ namespace LogJoint
         readonly string companyName;
         readonly string formatName;
         readonly string description = "";
-        readonly ILogProviderFactoryRegistry factoryRegistry;
+        readonly ILogProviderFactoryRegistry? factoryRegistry;
         readonly IRegexFactory regexFactory;
         protected readonly FormatViewOptions viewOptions;
         bool disposed;

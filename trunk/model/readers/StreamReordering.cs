@@ -17,7 +17,7 @@ namespace LogJoint
             if (a == null || !int.TryParse(a.Value, out JitterBufferSize))
                 JitterBufferSize = 16;
         }
-        static public StreamReorderingParams? FromConfigNode(XElement configNode)
+        static public StreamReorderingParams? FromConfigNode(XElement? configNode)
         {
             if (configNode == null)
                 return null;

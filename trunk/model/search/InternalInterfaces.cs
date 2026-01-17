@@ -60,7 +60,7 @@ namespace LogJoint
         SearchResultStatus Status { get; }
         void ReleaseProgress();
         MessagesContainers.ListBasedCollection CreateMessagesSnapshot();
-        MessagesContainers.ListBasedCollection GetLastSnapshot();
+        MessagesContainers.ListBasedCollection? GetLastSnapshot();
     };
 
     internal interface ICombinedSearchResultInternal : ICombinedSearchResult
@@ -76,7 +76,7 @@ namespace LogJoint
     internal interface ILogSourceSearchWorkerInternal
     {
         ILogSource LogSource { get; }
-        Task GetMessages(IFilter filter, Func<SearchResultMessage, bool> callback,
+        Task GetMessages(IFilter? filter, Func<SearchResultMessage, bool> callback,
             CancellationToken cancellation, Progress.IProgressEventsSink progressSink);
         void Start();
     };
