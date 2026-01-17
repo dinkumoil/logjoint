@@ -1695,6 +1695,7 @@ button {
     white-space: pre-wrap;
     font-family: monospace;
     word-break: break-all;
+    user-select: text;
 }
 .message-properties>.contents>.hl {
     background-color: yellow;
